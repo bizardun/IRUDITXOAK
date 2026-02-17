@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 
 // This check is to prevent errors in environments where process.env is not defined.
@@ -17,7 +18,6 @@ export const translateText = async (text: string, targetLang: string, targetLang
         const systemPrompt = "You are a professional translator for a high-end restaurant. Translate the following text from 'es' (Spanish) to the requested target language. Respond *only* with the translated text, without any explanation, quotes, or prefix. Maintain the original capitalization of the input text.";
         const userQuery = `Translate "${text}" to ${targetLangName} (code: ${targetLang}).`;
 
-        // FIX: Updated generateContent call to align with latest guidelines.
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: userQuery,

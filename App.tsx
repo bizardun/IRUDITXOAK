@@ -40,8 +40,6 @@ const MainLayout = () => {
                 <div className="print:hidden sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm py-3 px-4">
                     <div className="max-w-5xl mx-auto flex items-center justify-end">
                         
-                        {/* Botón de volver eliminado para aislar la app visualmente */}
-
                         <div className="flex bg-slate-100 p-1 rounded-full shadow-inner border border-slate-200">
                             <button 
                                 onClick={() => setIsAdmin(false)} 

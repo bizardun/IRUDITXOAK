@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useConfig } from '../../context/ConfigContext';
 import { ThemeConfig, RestaurantConfig } from '../../types';
 import { generateRestaurantZip } from '../../services/zipService';
+import DevicePreview from './DevicePreview';
 
 // --- ICONOS LOCALES ---
 const IconShare = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>;
@@ -11,6 +12,7 @@ const IconCopy = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} xmlns
 const IconCheck = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>;
 const IconWhatsapp = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>;
 const IconDownload = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>;
+const IconEye = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>;
 
 export default function FactoryDashboard() {
     const { availableApps, loadApp, createApp, deleteApp, exitFactory } = useConfig();
@@ -34,6 +36,9 @@ export default function FactoryDashboard() {
     const [isDeploying, setIsDeploying] = useState(false);
     const [deployUrl, setDeployUrl] = useState('');
     const [copied, setCopied] = useState(false);
+
+    // Estado para Vista Previa
+    const [previewApp, setPreviewApp] = useState<RestaurantConfig | null>(null);
 
     // Estado para Descargar ZIP
     const [isZipping, setIsZipping] = useState(false);
@@ -98,6 +103,13 @@ export default function FactoryDashboard() {
         }, 1500);
     };
 
+    const handlePreviewClick = (e: React.MouseEvent, app: RestaurantConfig) => {
+        e.stopPropagation();
+        setPreviewApp(app);
+        // Opcionalmente podemos "cargarla" en el contexto para que el simulador use sus datos reales
+        loadApp(app.id); 
+    };
+
     const closeShare = () => { setSharingApp(null); setCopied(false); };
     const copyToClipboard = () => {
         if (!deployUrl) return;
@@ -106,28 +118,17 @@ export default function FactoryDashboard() {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    // --- NUEVA LÓGICA DE DESCARGA ZIP ---
     const handleDownloadApp = async (e: React.MouseEvent, app: RestaurantConfig) => {
         e.stopPropagation();
         setIsZipping(true);
-        
         try {
-            // 1. Recuperar datos actualizados
             const storedData = localStorage.getItem(app.id);
             const latestPlatos = storedData ? JSON.parse(storedData) : app.initialPlatos;
-            
-            // 2. Crear config final
-            const configToExport = {
-                ...app,
-                initialPlatos: latestPlatos
-            };
-
-            // 3. Generar ZIP
+            const configToExport = { ...app, initialPlatos: latestPlatos };
             await generateRestaurantZip(configToExport);
-            
         } catch (error) {
             console.error("Error generando ZIP:", error);
-            alert("Error generando código fuente. Verifica que tengas conexión para cargar JSZip.");
+            alert("Error generando código fuente.");
         } finally {
             setIsZipping(false);
         }
@@ -136,6 +137,7 @@ export default function FactoryDashboard() {
     return (
         <div className="min-h-screen bg-slate-900 text-white font-sans p-4 sm:p-8 relative">
             
+            {/* Modal de Compartir */}
             {sharingApp && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in">
                     <div className="bg-slate-800 border border-slate-600 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative">
@@ -164,6 +166,11 @@ export default function FactoryDashboard() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Simulador de Dispositivos */}
+            {previewApp && (
+                <DevicePreview config={previewApp} onClose={() => setPreviewApp(null)} />
             )}
 
             <div className="max-w-6xl mx-auto">
@@ -213,28 +220,33 @@ export default function FactoryDashboard() {
                                             {app.theme && <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full border ${app.theme.style === 'modern' ? 'bg-blue-900/30 text-blue-400 border-blue-500/30' : app.theme.style === 'fresh' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-500/30' : 'bg-amber-900/30 text-amber-400 border-amber-500/30'}`}>{app.theme.style}</span>}
                                         </div>
                                         <div className="space-y-1 mb-4"><h3 className="font-bold text-lg text-white leading-tight truncate pr-4">{app.name}</h3>{app.slogan && <p className="text-slate-400 text-xs truncate">{app.slogan}</p>}</div>
-                                        <div className="mt-4 space-y-2 mb-4">
-                                            <div onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`https://${app.id.replace(/_/g, '-')}.menu-app.io`); }} className="flex items-center gap-2 bg-slate-900/50 p-2 rounded border border-slate-700/50 cursor-copy hover:border-emerald-500/50 transition-colors group/url" title="Copiar URL App Cliente">
-                                                <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></div>
-                                                <div className="flex-1 min-w-0"><p className="text-[10px] text-slate-500 uppercase font-bold leading-none mb-0.5">App Cliente</p><p className="text-xs text-emerald-400 font-mono truncate">menu.app/{app.id}</p></div>
-                                                <IconCopy className="w-4 h-4 text-slate-600 group-hover/url:text-slate-300" />
-                                            </div>
-                                            <div onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`https://${app.id.replace(/_/g, '-')}.menu-app.io/admin`); }} className="flex items-center gap-2 bg-slate-900/50 p-2 rounded border border-slate-700/50 cursor-copy hover:border-blue-500/50 transition-colors group/url" title="Copiar URL Panel Gestión">
-                                                <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></div>
-                                                <div className="flex-1 min-w-0"><p className="text-[10px] text-slate-500 uppercase font-bold leading-none mb-0.5">Gestión</p><p className="text-xs text-blue-400 font-mono truncate">menu.app/{app.id}/admin</p></div>
-                                                <IconCopy className="w-4 h-4 text-slate-600 group-hover/url:text-slate-300" />
-                                            </div>
-                                            <button onClick={(e) => handleShareClick(e, app)} className="w-full flex items-center justify-center gap-2 text-xs text-slate-400 hover:text-white py-1 hover:bg-slate-700 rounded transition-colors"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h7v7H3z"/></svg> Ver Código QR</button>
+                                        
+                                        {/* Acciones rápidas en tarjeta */}
+                                        <div className="mt-4 flex gap-2">
+                                            <button 
+                                                onClick={(e) => handlePreviewClick(e, app)}
+                                                className="flex-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white py-1.5 rounded-lg text-xs font-bold transition-all border border-slate-600"
+                                                title="Previsualizar en dispositivos"
+                                            >
+                                                <IconEye /> Preview
+                                            </button>
+                                            <button 
+                                                onClick={(e) => handleShareClick(e, app)}
+                                                className="flex-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white py-1.5 rounded-lg text-xs font-bold transition-all border border-slate-600"
+                                            >
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h7v7H3z"/></svg> QR
+                                            </button>
                                         </div>
                                     </div>
-                                    <div className="pt-4 border-t border-slate-700/50 flex justify-between items-center gap-2">
-                                        <span className="text-xs text-slate-500 font-mono">{app.initialPlatos?.length || 0} items</span>
+
+                                    <div className="pt-4 mt-4 border-t border-slate-700/50 flex justify-between items-center gap-2">
+                                        <span className="text-xs text-slate-500 font-mono">{app.initialPlatos?.length || 0} platos</span>
                                         {!isDeleteMode && (
                                             <div className="flex items-center gap-2">
-                                                 <button onClick={(e) => handleDownloadApp(e, app)} disabled={isZipping} className="bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 p-2 rounded-lg transition-all hover:scale-105 shadow-sm" title="Descargar Código Fuente (ZIP)">
+                                                 <button onClick={(e) => handleDownloadApp(e, app)} disabled={isZipping} className="bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 p-2 rounded-lg transition-all hover:scale-105 shadow-sm" title="Descargar ZIP">
                                                     {isZipping ? <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : <IconDownload />}
                                                 </button>
-                                                <button onClick={(e) => handleShareClick(e, app)} className="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-lg transition-all hover:scale-105 shadow-sm" title="Implementar y Compartir"><IconRocket /></button>
+                                                <button onClick={(e) => handleShareClick(e, app)} className="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-lg transition-all hover:scale-105 shadow-sm" title="Desplegar"><IconRocket /></button>
                                                 <button className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-bold px-3 py-2 rounded-lg transition-colors flex items-center gap-1 group-hover:bg-emerald-600 group-hover:text-white">Abrir <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
                                             </div>
                                         )}
