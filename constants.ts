@@ -28,7 +28,7 @@ export const translations: Translations = {
             GLUTEN: "Gluten", CRUSTACEOS: "Crustáceos", HUEVOS: "Huevos", PESCADO: "Pescado", 
             CACAHUETES: "Cacahuetes", SOJA: "Soja", LACTEOS: "Lácteos", 
             APIO: "Apio", MOSTAZA: "Mostaza", SESAMO: "Sésamo", SULFITOS: "Sulfitos", 
-            ALTRAMUCES: "Altramuces", MOLUSCOS: "Moluscos"
+            ALTRAMUCES: "Altramuces", MOLUSCOS: "Moluscos", CALAMARES: "Calamares", MARISCO: "Marisco"
         },
         gestion: {
             panel: "Gestión",
@@ -62,7 +62,7 @@ export const translations: Translations = {
             GLUTEN: "Glutena", CRUSTACEOS: "Krustazeoak", HUEVOS: "Arrautzak", PESCADO: "Arraina", 
             CACAHUETES: "Kakahueteak", SOJA: "Soja", LACTEOS: "Esnekiak", 
             APIO: "Apioa", MOSTAZA: "Ziapea", SESAMO: "Sesamoa", SULFITOS: "Sulfitoak", 
-            ALTRAMUCES: "Altramuzak", MOLUSCOS: "Moluskuak"
+            ALTRAMUCES: "Altramuzak", MOLUSCOS: "Moluskuak", MARISCO: "Itsaskia"
         }
     },
     EN: {
@@ -81,7 +81,7 @@ export const translations: Translations = {
             GLUTEN: "Gluten", CRUSTACEOS: "Crustaceans", HUEVOS: "Eggs", PESCADO: "Fish", 
             CACAHUETES: "Peanuts", SOJA: "Soy", LACTEOS: "Dairy", 
             APIO: "Celery", MOSTAZA: "Mustard", SESAMO: "Sesame", SULFITOS: "Sulphites", 
-            ALTRAMUCES: "Lupins", MOLUSCOS: "Molluscs"
+            ALTRAMUCES: "Lupins", MOLUSCOS: "Molluscs", MARISCO: "Seafood"
         }
     },
     FR: {
@@ -100,7 +100,7 @@ export const translations: Translations = {
             GLUTEN: "Gluten", CRUSTACEOS: "Crustacés", HUEVOS: "Œufs", PESCADO: "Poisson", 
             CACAHUETES: "Arachides", SOJA: "Soja", LACTEOS: "Produits laitiers", 
             APIO: "Céleri", MOSTAZA: "Moutarde", SESAMO: "Sésame", SULFITOS: "Sulfites", 
-            ALTRAMUCES: "Lupins", MOLUSCOS: "Mollusques"
+            ALTRAMUCES: "Lupins", MOLUSCOS: "Mollusques", MARISCO: "Fruits de mer"
         }
     },
     DE: {
@@ -119,7 +119,7 @@ export const translations: Translations = {
             GLUTEN: "Gluten", CRUSTACEOS: "Krebstiere", HUEVOS: "Eier", PESCADO: "Fisch", 
             CACAHUETES: "Erdnüsse", SOJA: "Soja", LACTEOS: "Milchprodukte", 
             APIO: "Sellerie", MOSTAZA: "Senf", SESAMO: "Sesam", SULFITOS: "Sulfite", 
-            ALTRAMUCES: "Lupinen", MOLUSCOS: "Weichtiere"
+            ALTRAMUCES: "Lupinen", MOLUSCOS: "Weichtiere", MARISCO: "Meeresfrüchte"
         }
     },
     IT: {
@@ -138,7 +138,7 @@ export const translations: Translations = {
             GLUTEN: "Glutine", CRUSTACEOS: "Crostacei", HUEVOS: "Uova", PESCADO: "Pesce", 
             CACAHUETES: "Arachidi", SOJA: "Soia", LACTEOS: "Latticini", 
             APIO: "Sedano", MOSTAZA: "Senape", SESAMO: "Sesamo", SULFITOS: "Solfiti", 
-            ALTRAMUCES: "Lupini", MOLUSCOS: "Molluschi"
+            ALTRAMUCES: "Lupini", MOLUSCOS: "Molluschi", MARISCO: "Frutti di mare"
         }
     }
 };

@@ -7,6 +7,7 @@ import api from '../services/api';
 interface ConfigContextType {
     config: RestaurantConfig;
     isFactoryMode: boolean;
+    showMasterPanelButton: boolean;
     availableApps: RestaurantConfig[];
     loadApp: (id: string) => void;
     createApp: (name: string, prompt: string, fileData: string | null, mimeType: string | null, theme: ThemeConfig) => Promise<void>;
@@ -21,11 +22,14 @@ const APPS_STORAGE_KEY = 'global_apps_registry';
 const CURRENT_APP_KEY = 'current_active_app_id';
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const isMasterAdmin = typeof window !== 'undefined' && window.location.search.includes('admin=master');
+
     // Estado inicial seguro usando la configuración activa real
     const [config, setConfigState] = useState<RestaurantConfig>(getActiveConfig());
     
-    // CAMBIO: Inicializamos en true para que el Dashboard sea la primera pantalla
-    const [isFactoryMode, setIsFactoryMode] = useState(true);
+    // Inicializamos en true SOLO si es master admin. Si no, arranca directo en la app.
+    const [isFactoryMode, setIsFactoryMode] = useState(isMasterAdmin);
+    const [showMasterPanelButton, setShowMasterPanelButton] = useState(isMasterAdmin);
     
     const [availableApps, setAvailableApps] = useState<RestaurantConfig[]>([bolinaConfig]);
 
@@ -38,20 +42,31 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 
                 if (savedApps) {
                     const parsed = JSON.parse(savedApps);
-                    // Filtramos para evitar duplicados del master y aseguramos que el master siempre sea la versión de código (bolinaConfig)
                     const others = Array.isArray(parsed) 
                         ? parsed.filter((a: any) => a.id !== bolinaConfig.id)
                         : [];
                     apps = [bolinaConfig, ...others];
                 }
                 setAvailableApps(apps);
+
+                // Si no somos admin master, forzamos cargar la última app usada o Boliña
+                if (!isMasterAdmin) {
+                    const lastAppId = localStorage.getItem(CURRENT_APP_KEY);
+                    if (lastAppId) {
+                        const app = apps.find(a => a.id === lastAppId);
+                        if (app) {
+                            setConfigState(app);
+                        }
+                    }
+                    setIsFactoryMode(false);
+                }
             } catch (e) {
                 console.error("Error cargando registro de apps:", e);
                 setAvailableApps([bolinaConfig]);
             }
         };
         loadRegistry();
-    }, []);
+    }, [isMasterAdmin]);
 
     const loadApp = (id: string) => {
         try {
@@ -166,6 +181,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         <ConfigContext.Provider value={{
             config,
             isFactoryMode,
+            showMasterPanelButton,
             availableApps,
             loadApp,
             createApp,

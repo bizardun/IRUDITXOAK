@@ -33,6 +33,8 @@ export const AllergenIcon: React.FC<{ type: Alergeno; className?: string }> = ({
         SULFITOS: <path d="M4 6h16M4 12h16M4 18h16" />, // E220 (simbólico)
         ALTRAMUCES: <path d="M12 2L4 12l8 10 8-10-8-10z" />, // Grano
         MOLUSCOS: <path d="M12 2c-5 0-9 4-9 9 0 5 9 11 9 11s9-6 9-11c0-5-4-9-9-9z" />, // Concha
+        CALAMARES: <path d="M12 2c-5 0-9 4-9 9 0 5 9 11 9 11s9-6 9-11c0-5-4-9-9-9z" />, // Concha (reusing moluscos for now)
+        MARISCO: <path d="M12 2a4 4 0 0 0-4 4v2H6v4h12V8h-2V6a4 4 0 0 0-4-4Zm0 14c-2 0-3 1-3 3v1h6v-1c0-2-1-3-3-3Z" />, // Reusing crustaceos for now
     };
 
     return (

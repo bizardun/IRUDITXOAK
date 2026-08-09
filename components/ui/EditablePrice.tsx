@@ -48,5 +48,5 @@ export const EditablePrice: React.FC<EditablePriceProps> = ({ price, id, onUpdat
             />
         );
     }
-    return <span onClick={() => setIsEditing(true)} className="cursor-pointer hover:bg-blue-50 hover:text-blue-700 px-1 rounded transition-colors">€{price.toFixed(2)}</span>;
+    return <span onClick={() => setIsEditing(true)} className="cursor-pointer border border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 px-2 py-1 rounded-md transition-colors shadow-sm text-sm font-medium">€{price.toFixed(2)}</span>;
 };

@@ -174,14 +174,19 @@ export default function FactoryDashboard() {
             )}
 
             <div className="max-w-6xl mx-auto">
-                <header className="flex justify-between items-center mb-12 border-b border-slate-700 pb-4">
+                <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 border-b border-slate-700 pb-4 gap-4">
                     <div>
                         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-500">Gestión de Restaurantes</h1>
                         <p className="text-slate-400 text-sm">Plataforma de Gestión y Creación</p>
                     </div>
-                    <button onClick={exitFactory} className="text-slate-400 hover:text-white transition-colors text-xs font-bold flex items-center gap-2 border border-slate-700 px-3 py-1.5 rounded-full hover:bg-slate-800">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18-6-6 6-6"/></svg> Volver al Restaurante Activo
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <a href="/proyecto_completo.zip" download="proyecto_completo.zip" className="text-emerald-400 hover:text-white transition-colors text-xs font-bold flex items-center gap-2 border border-emerald-700/50 px-3 py-1.5 rounded-full hover:bg-emerald-900/30">
+                            <IconDownload /> Descargar Proyecto Completo
+                        </a>
+                        <button onClick={exitFactory} className="text-slate-400 hover:text-white transition-colors text-xs font-bold flex items-center gap-2 border border-slate-700 px-3 py-1.5 rounded-full hover:bg-slate-800">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18-6-6 6-6"/></svg> Volver al Restaurante Activo
+                        </button>
+                    </div>
                 </header>
 
                 {step === 'list' && (

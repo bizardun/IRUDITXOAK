@@ -15,18 +15,20 @@ interface AddPlatoModalProps {
 
 const ALLERGEN_LIST: { id: Alergeno; label: string }[] = [
     { id: 'GLUTEN', label: 'Gluten' },
-    { id: 'CRUSTACEOS', label: 'Crustáceos' },
+    { id: 'LACTEOS', label: 'Lácteos' },
     { id: 'HUEVOS', label: 'Huevos' },
     { id: 'PESCADO', label: 'Pescado' },
-    { id: 'CACAHUETES', label: 'Cacahuetes' },
+    { id: 'MARISCO', label: 'Marisco' },
+    { id: 'CRUSTACEOS', label: 'Crustáceos' },
+    { id: 'MOLUSCOS', label: 'Moluscos' },
     { id: 'SOJA', label: 'Soja' },
-    { id: 'LACTEOS', label: 'Lácteos' },
-    { id: 'APIO', label: 'Apio' },
+    { id: 'CACAHUETES', label: 'Cacahuetes' },
     { id: 'MOSTAZA', label: 'Mostaza' },
     { id: 'SESAMO', label: 'Sésamo' },
     { id: 'SULFITOS', label: 'Sulfitos' },
+    { id: 'APIO', label: 'Apio' },
     { id: 'ALTRAMUCES', label: 'Altramuces' },
-    { id: 'MOLUSCOS', label: 'Moluscos' },
+    { id: 'CALAMARES', label: 'Calamares' },
 ];
 
 export default function AddPlatoModal({ isOpen, onClose, mode, refreshData, platoToEdit }: AddPlatoModalProps) {
@@ -50,7 +52,7 @@ export default function AddPlatoModal({ isOpen, onClose, mode, refreshData, plat
                     tr[l.code] = (platoToEdit as any)[`${l.code}_Nombre`] || '';
                 });
                 setTranslationsData(tr);
-                setSelectedAllergens(platoToEdit.Alergenos || []);
+                setSelectedAllergens(Array.isArray(platoToEdit.Alergenos) ? platoToEdit.Alergenos : []);
             } else {
                 setData(initialData);
                 setTranslationsData({});

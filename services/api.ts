@@ -1,5 +1,5 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import type { Plato, RestaurantConfig, Alergeno } from '../types';
 import { getActiveConfig } from '../config/restaurant';
 
@@ -21,13 +21,14 @@ export const translateText = async (text: string, targetLang: string, targetLang
     if (!text || !apiKey) return { text, sources: [] };
     try {
         const isBasque = targetLang === 'EU';
-        const systemPrompt = `You are a professional restaurant translator. 
+        const systemPrompt = `You are a professional restaurant translator and culinary expert.
         Translate from Spanish to ${targetLangName}. 
+        Focus on culinary accuracy, cultural localization, and appetizing descriptions.
         ${isBasque ? "CRITICAL: For Basque (EU) translations, you MUST verify terminology using the Elhuyar Dictionary (https://www.euskadi.eus/diccionario-elhuyar/) to ensure academic correctness." : ""}
         Respond ONLY with the translated text.`;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.6-flash',
             contents: `Translate "${text}" to ${targetLangName}.`,
             config: { 
                 systemInstruction: systemPrompt,
@@ -49,29 +50,62 @@ export const analyzeDish = async (dishName: string): Promise<{ translations: Rec
     if (!dishName || !apiKey) return { translations: {}, allergens: [], sources: [] };
     
     const allergenList = [
-        "GLUTEN", "CRUSTACEOS", "HUEVOS", "PESCADO", "CACAHUETES", "SOJA", "LACTEOS", 
-        "APIO", "MOSTAZA", "SESAMO", "SULFITOS", "ALTRAMUCES", "MOLUSCOS"
+        "GLUTEN", "LACTEOS", "HUEVOS", "PESCADO", "MARISCO", "CRUSTACEOS", "MOLUSCOS", 
+        "SOJA", "CACAHUETES", "MOSTAZA", "SESAMO", "SULFITOS", "APIO", "ALTRAMUCES", "CALAMARES"
     ];
 
     const systemPrompt = `
-        Analyze the Spanish Dish Name.
-        1. Translate to: EU, EN, FR, DE, IT.
+        You are an expert culinary AI and food safety inspector.
+        Analyze the Spanish Dish Name provided.
+        
+        1. Translate the dish name to: EU, EN, FR, DE, IT.
         2. For EU (Basque), you MUST use Google Search to cross-reference with https://www.euskadi.eus/diccionario-elhuyar/.
-        3. Detect allergens from: ${allergenList.join(', ')}.
+        3. Detect ALL allergens present in the standard recipe for this dish from the following list ONLY: ${allergenList.join(', ')}.
+        
+        CRITICAL ALLERGEN RULES:
+        - If the dish name explicitly contains a word related to an allergen (e.g., "marisco", "queso", "huevo", "pescado", "calamar"), you MUST ALWAYS include that specific allergen (e.g., "MARISCO", "LACTEOS", "HUEVOS", "PESCADO", "CALAMARES").
+        - Think deeply about the typical ingredients used to prepare this dish, including sauces, marinades, and garnishes.
+        - "Mayonesa" (Mayonnaise) contains HUEVOS.
+        - "Salsa de soja" (Soy sauce) contains SOJA and GLUTEN.
+        - "Queso", "Nata", "Mantequilla" (Cheese, Cream, Butter) contain LACTEOS.
+        - "Pan", "Rebozado", "Empanado", "Harina", "Galleta" (Bread, Battered, Breaded, Flour, Cookie) contain GLUTEN.
+        - "Vino", "Vinagre" (Wine, Vinegar) often contain SULFITOS.
+        - "Marisco" includes shrimp, prawns, crab, lobster (CRUSTACEOS) and clams, mussels, octopus, squid (MOLUSCOS/CALAMARES). If the dish is called "de marisco" or "con marisco", ALWAYS include the "MARISCO" allergen, and optionally add CRUSTACEOS/MOLUSCOS if you know the specific ingredients.
+        - "Pasta" contains GLUTEN and often HUEVOS.
+        - "Croquetas" contain GLUTEN, LACTEOS, and often HUEVOS.
+        - "Tortilla" contains HUEVOS.
+        - "Pesto" contains LACTEOS.
+        - "Chocolate" often contains LACTEOS and SOJA.
+        
         Return JSON ONLY.
-        {
-            "translations": { "EU": "...", "EN": "...", "FR": "...", "DE": "...", "IT": "..." },
-            "allergens": ["..."]
-        }
     `;
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.6-flash',
             contents: `Dish Name: "${dishName}"`,
             config: { 
                 systemInstruction: systemPrompt,
                 responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        translations: {
+                            type: Type.OBJECT,
+                            properties: {
+                                EU: { type: Type.STRING },
+                                EN: { type: Type.STRING },
+                                FR: { type: Type.STRING },
+                                DE: { type: Type.STRING },
+                                IT: { type: Type.STRING }
+                            }
+                        },
+                        allergens: {
+                            type: Type.ARRAY,
+                            items: { type: Type.STRING }
+                        }
+                    }
+                },
                 tools: [{ googleSearch: {} }]
             }
         });
@@ -108,7 +142,7 @@ export const generateAppConfig = async (prompt: string, fileData: string | null,
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.6-flash',
             contents: { parts },
             config: { 
                 systemInstruction: systemPrompt,
