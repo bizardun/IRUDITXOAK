@@ -156,13 +156,13 @@ export default function FactoryDashboard() {
                         className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white mb-4 text-center focus:border-emerald-500 outline-none"
                         onKeyDown={e => {
                             if (e.key === 'Enter') {
-                                if (password === 'admin123') setIsUnlocked(true);
+                                if (password === (import.meta.env.VITE_MASTER_PASSWORD || '8517')) setIsUnlocked(true);
                                 else alert('Contraseña incorrecta');
                             }
                         }}
                     />
                     <button 
-                        onClick={() => password === 'admin123' ? setIsUnlocked(true) : alert('Contraseña incorrecta')}
+                        onClick={() => password === (import.meta.env.VITE_MASTER_PASSWORD || '8517') ? setIsUnlocked(true) : alert('Contraseña incorrecta')}
                         className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-lg font-bold transition-colors"
                     >
                         Desbloquear Panel
