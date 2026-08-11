@@ -41,6 +41,7 @@ export default function FactoryDashboard() {
     const [adminUrl, setAdminUrl] = useState('');
     const [copiedClient, setCopiedClient] = useState(false);
     const [copiedAdmin, setCopiedAdmin] = useState(false);
+    const [showQr, setShowQr] = useState(false);
     
 
     // Estado para Vista Previa
@@ -105,6 +106,7 @@ export default function FactoryDashboard() {
         setAdminUrl('');
         setCopiedClient(false);
         setCopiedAdmin(false);
+        setShowQr(false);
         setTimeout(() => {
             const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://tu-dominio.vercel.app';
             setClientUrl(`${baseUrl}/?app=${app.id}&client=true`);
@@ -211,8 +213,15 @@ export default function FactoryDashboard() {
                                     
                                     <div className="grid grid-cols-2 gap-3 mt-4">
                                         <a href={`https://wa.me/?text=Mira nuestra carta: ${clientUrl}`} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white py-2.5 rounded-xl font-bold text-sm transition-colors"><IconWhatsapp /> Enviar a Cliente</a>
-                                        <button onClick={() => alert(`QR generado para: ${clientUrl}`)} className="flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-900 py-2.5 rounded-xl font-bold text-sm transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h7v7H3z"/></svg> Ver QR Carta</button>
+                                        <button onClick={() => setShowQr(!showQr)} className="flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-900 py-2.5 rounded-xl font-bold text-sm transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h7v7H3z"/></svg> {showQr ? 'Ocultar QR' : 'Ver QR Carta'}</button>
                                     </div>
+                                    {showQr && (
+                                        <div className="mt-4 p-4 bg-white rounded-xl flex flex-col items-center justify-center animate-fade-in-up border-4 border-slate-700">
+                                            <p className="text-slate-800 font-bold mb-2 text-sm">Escanea para ver la carta:</p>
+                                            <img src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(clientUrl)}&size=300x300&qzone=1&bgcolor=ffffff`} alt="QR Code" className="w-48 h-48 object-contain" />
+                                        </div>
+                                    )}
+
                                 </div>
                             )}
                         </div>
