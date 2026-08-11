@@ -15,9 +15,8 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
     const [downloading, setDownloading] = useState(false);
 
     useEffect(() => {
-        const originUrl = typeof window !== 'undefined' ? window.location.origin : '';
-        const path = typeof window !== 'undefined' ? window.location.pathname : '';
-        const baseUrl = originUrl + path + "?app=" + config.id + "&client=true";
+        const originUrl = typeof window !== 'undefined' ? window.location.origin : 'https://tu-dominio.vercel.app';
+        const baseUrl = originUrl + "/?app=" + config.id + "&client=true";
         setCleanUrl(baseUrl);
         const now = new Date();
         const day = now.getDate().toString().padStart(2, '0');
@@ -67,7 +66,7 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
                     <button onClick={() => setView('home')} className="flex items-center gap-2 text-slate-600 hover:text-slate-900 font-bold transition-colors">
                         <IconChevronLeft /> Volver
                     </button>
-                    <h1 className="text-lg font-bold text-slate-800 hidden sm:block">Generador de QR</h1>
+                    <h1 className="text-lg font-bold text-slate-800 hidden sm:block">Generador de QR (v2)</h1>
                     
                     <div className="flex gap-2">
                         <button onClick={handleDownload} disabled={downloading} className="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-bold hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2 text-sm">
