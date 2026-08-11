@@ -37,8 +37,11 @@ export default function FactoryDashboard() {
     // Estado para Compartir / Desplegar
     const [sharingApp, setSharingApp] = useState<RestaurantConfig | null>(null);
     const [isDeploying, setIsDeploying] = useState(false);
-    const [deployUrl, setDeployUrl] = useState('');
-    const [copied, setCopied] = useState(false);
+    const [clientUrl, setClientUrl] = useState('');
+    const [adminUrl, setAdminUrl] = useState('');
+    const [copiedClient, setCopiedClient] = useState(false);
+    const [copiedAdmin, setCopiedAdmin] = useState(false);
+    
 
     // Estado para Vista Previa
     const [previewApp, setPreviewApp] = useState<RestaurantConfig | null>(null);
@@ -98,12 +101,16 @@ export default function FactoryDashboard() {
         e.stopPropagation();
         setSharingApp(app);
         setIsDeploying(true);
-        setDeployUrl('');
+        setClientUrl('');
+        setAdminUrl('');
+        setCopiedClient(false);
+        setCopiedAdmin(false);
         setTimeout(() => {
-            const mockUrl = `https://${app.id.replace(/_/g, '-')}.menu-app.io`;
-            setDeployUrl(mockUrl);
+            const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://tu-dominio.vercel.app';
+            setClientUrl(`${baseUrl}/?app=${app.id}&client=true`);
+            setAdminUrl(`${baseUrl}/?app=${app.id}&admin=true`);
             setIsDeploying(false);
-        }, 1500);
+        }, 800);
     };
 
     const handlePreviewClick = (e: React.MouseEvent, app: RestaurantConfig) => {
@@ -113,14 +120,8 @@ export default function FactoryDashboard() {
         loadApp(app.id); 
     };
 
-    const closeShare = () => { setSharingApp(null); setCopied(false); };
-    const copyToClipboard = () => {
-        if (!deployUrl) return;
-        navigator.clipboard.writeText(deployUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-
+    const closeShare = () => { setSharingApp(null); setCopiedClient(false); setCopiedAdmin(false); };
+    
     const handleDownloadApp = async (e: React.MouseEvent, app: RestaurantConfig) => {
         e.stopPropagation();
         setIsZipping(true);
@@ -187,17 +188,30 @@ export default function FactoryDashboard() {
                                 {isDeploying ? <svg className="animate-spin h-8 w-8 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : <IconRocket />}
                             </div>
                             {isDeploying ? (
-                                <div className="space-y-2"><h3 className="text-xl font-bold text-white">Implementando App...</h3><p className="text-slate-400 text-sm">Generando rutas...</p></div>
+                                <div className="space-y-2"><h3 className="text-xl font-bold text-white">Generando Enlaces...</h3></div>
                             ) : (
-                                <div className="w-full space-y-6 animate-fade-in-up">
-                                    <div className="space-y-1"><h3 className="text-xl font-bold text-white">¡{sharingApp.name} online!</h3><p className="text-slate-400 text-sm">Lista para compartir.</p></div>
-                                    <div className="bg-slate-900 rounded-xl p-3 flex items-center gap-2 border border-slate-700">
-                                        <input readOnly value={deployUrl} className="bg-transparent text-emerald-400 text-sm font-mono flex-1 outline-none" />
-                                        <button onClick={copyToClipboard} className={`p-2 rounded-lg transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'}`}>{copied ? <IconCheck /> : <IconCopy />}</button>
+                                <div className="w-full space-y-6 animate-fade-in-up text-left">
+                                    <div className="space-y-1 text-center"><h3 className="text-xl font-bold text-white">¡{sharingApp.name} online!</h3><p className="text-slate-400 text-sm">Enlaces generados para tu Vercel.</p></div>
+                                    
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">👩‍🍳 Panel de Administración (Dueño)</label>
+                                        <div className="bg-slate-900 rounded-xl p-3 flex items-center gap-2 border border-blue-900/50">
+                                            <input readOnly value={adminUrl} className="bg-transparent text-blue-400 text-xs font-mono flex-1 outline-none" />
+                                            <button onClick={() => { navigator.clipboard.writeText(adminUrl); setCopiedAdmin(true); setTimeout(() => setCopiedAdmin(false), 2000); }} className={`p-2 rounded-lg transition-all ${copiedAdmin ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'}`}>{copiedAdmin ? <IconCheck /> : <IconCopy />}</button>
+                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <a href={`https://wa.me/?text=Mira la carta: ${deployUrl}`} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white py-2.5 rounded-xl font-bold text-sm transition-colors"><IconWhatsapp /> WhatsApp</a>
-                                        <button onClick={() => alert(`QR generado para: ${deployUrl}`)} className="flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-900 py-2.5 rounded-xl font-bold text-sm transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h7v7H3z"/></svg> Ver QR</button>
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">🍽️ App Pública (Clientes / Carta)</label>
+                                        <div className="bg-slate-900 rounded-xl p-3 flex items-center gap-2 border border-emerald-900/50">
+                                            <input readOnly value={clientUrl} className="bg-transparent text-emerald-400 text-xs font-mono flex-1 outline-none" />
+                                            <button onClick={() => { navigator.clipboard.writeText(clientUrl); setCopiedClient(true); setTimeout(() => setCopiedClient(false), 2000); }} className={`p-2 rounded-lg transition-all ${copiedClient ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'}`}>{copiedClient ? <IconCheck /> : <IconCopy />}</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-3 mt-4">
+                                        <a href={`https://wa.me/?text=Mira nuestra carta: ${clientUrl}`} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white py-2.5 rounded-xl font-bold text-sm transition-colors"><IconWhatsapp /> Enviar a Cliente</a>
+                                        <button onClick={() => alert(`QR generado para: ${clientUrl}`)} className="flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-900 py-2.5 rounded-xl font-bold text-sm transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h7v7H3z"/></svg> Ver QR Carta</button>
                                     </div>
                                 </div>
                             )}
