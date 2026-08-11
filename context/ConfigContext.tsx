@@ -22,7 +22,8 @@ const APPS_STORAGE_KEY = 'global_apps_registry';
 const CURRENT_APP_KEY = 'current_active_app_id';
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const isMasterAdmin = typeof window !== 'undefined' && window.location.search.includes('admin=master');
+    const isClientUrl = typeof window !== 'undefined' && window.location.search.includes('client=true');
+    const isMasterAdmin = !isClientUrl;
 
     // Estado inicial seguro usando la configuración activa real
     const [config, setConfigState] = useState<RestaurantConfig>(getActiveConfig());

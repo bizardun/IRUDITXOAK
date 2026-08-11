@@ -2,6 +2,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Plato, RestaurantConfig, Alergeno } from '../types';
 import { getActiveConfig } from '../config/restaurant';
+import { db } from './firebase';
+import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+
 
 const apiKey = typeof process !== 'undefined' && process.env && process.env.API_KEY
   ? process.env.API_KEY
@@ -169,53 +172,129 @@ export const generateAppConfig = async (prompt: string, fileData: string | null,
     }
 };
 
-const loadData = (): Plato[] => {
-    const config = getActiveConfig();
-    if (!config || !config.initialPlatos) return [];
-    if (typeof localStorage === 'undefined') return config.initialPlatos;
-    const stored = localStorage.getItem(config.id);
-    if (stored) {
-        try {
-            const parsed = JSON.parse(stored);
-            if (Array.isArray(parsed)) return parsed;
-        } catch (e) {}
+
+const PLATOS_COLLECTION = 'platos';
+const CONFIG_DOC = 'config/main';
+
+const getPlatos = async (): Promise<Plato[]> => {
+    try {
+        const querySnapshot = await getDocs(collection(db, PLATOS_COLLECTION));
+        let platos = querySnapshot.docs.map(doc => doc.data() as Plato);
+        
+        if (platos.length === 0) {
+            console.log('Seeding initial platos...');
+            const config = getActiveConfig();
+            let initialData = config.initialPlatos;
+            if (typeof window !== 'undefined' && window.localStorage) {
+                try {
+                    const stored = window.localStorage.getItem(config.id);
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            initialData = parsed;
+                            console.log('Migrated data from LocalStorage to Firebase');
+                        }
+                    }
+                } catch(e) {}
+            }
+            platos = initialData;
+            const batch = writeBatch(db);
+            platos.forEach(p => {
+                const docRef = doc(collection(db, PLATOS_COLLECTION), p.ID_Plato.toString());
+                batch.set(docRef, p);
+            });
+            await batch.commit();
+        }
+        
+        // Sort by ID_Plato to keep order
+        platos.sort((a, b) => a.ID_Plato - b.ID_Plato);
+        return platos;
+    } catch (e) {
+        console.error("Error fetching platos from Firebase:", e);
+        return getActiveConfig().initialPlatos;
     }
-    return config.initialPlatos;
 };
 
-const saveData = (platos: Plato[]) => {
-    const config = getActiveConfig();
-    if (typeof localStorage !== 'undefined' && config) {
-        localStorage.setItem(config.id, JSON.stringify(platos));
+const getMenuPrice = async (): Promise<number> => {
+    try {
+        const docSnap = await getDoc(doc(db, CONFIG_DOC));
+        if (docSnap.exists() && docSnap.data().menuPrice !== undefined) {
+            return parseFloat(docSnap.data().menuPrice);
+        }
+        // Migration from LocalStorage
+        let fallbackPrice = 16.50;
+        if (typeof window !== 'undefined' && window.localStorage) {
+            const stored = window.localStorage.getItem(`${getActiveConfig().id}_price`);
+            if (stored) fallbackPrice = parseFloat(stored);
+        }
+        // Save it to firebase
+        await setDoc(doc(db, CONFIG_DOC), { menuPrice: fallbackPrice }, { merge: true });
+        return fallbackPrice;
+    } catch (e) {
+        console.error("Error fetching menu price:", e);
+        return 16.50;
+    }
+};
+
+const updatePlato = async (id: number, data: Partial<Plato>) => {
+    try {
+        const docRef = doc(db, PLATOS_COLLECTION, id.toString());
+        await updateDoc(docRef, data);
+    } catch (e) {
+        console.error("Error updating plato:", e);
+    }
+};
+
+const updatePlatosOrder = async (newOrder: Plato[]) => {
+    try {
+        const batch = writeBatch(db);
+        newOrder.forEach((p, index) => {
+            const docRef = doc(db, PLATOS_COLLECTION, p.ID_Plato.toString());
+            // Optionally, we could add an order field if we want custom ordering.
+            // But since ID_Plato is preserved, we just update all if needed.
+            batch.set(docRef, p, { merge: true }); 
+        });
+        await batch.commit();
+    } catch (e) {
+        console.error("Error updating order:", e);
+    }
+};
+
+const addPlato = async (plato: any) => {
+    try {
+        const currentPlatos = await getPlatos();
+        const newId = Math.max(...currentPlatos.map(p => p.ID_Plato), 0) + 1;
+        const newPlato = { ...plato, ID_Plato: newId, Activo_Dia: true };
+        await setDoc(doc(db, PLATOS_COLLECTION, newId.toString()), newPlato);
+    } catch (e) {
+        console.error("Error adding plato:", e);
+    }
+};
+
+const deletePlato = async (id: number) => {
+    try {
+        await deleteDoc(doc(db, PLATOS_COLLECTION, id.toString()));
+    } catch (e) {
+        console.error("Error deleting plato:", e);
+    }
+};
+
+const setMenuPrice = async (price: number) => {
+    try {
+        await setDoc(doc(db, CONFIG_DOC), { menuPrice: price }, { merge: true });
+    } catch (e) {
+        console.error("Error setting menu price:", e);
     }
 };
 
 export default {
-    getPlatos: async () => loadData(),
-    getMenuPrice: async () => {
-        const config = getActiveConfig();
-        const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(`${config.id}_price`) : null;
-        return stored ? parseFloat(stored) : 16.50;
-    },
-    updatePlato: async (id: number, data: Partial<Plato>) => {
-        const current = loadData();
-        saveData(current.map(p => p.ID_Plato === id ? { ...p, ...data } : p));
-    },
-    updatePlatosOrder: async (newOrder: Plato[]) => saveData(newOrder),
-    addPlato: async (plato: any) => {
-        const current = loadData();
-        const newId = Math.max(...current.map(p => p.ID_Plato), 0) + 1;
-        current.push({ ...plato, ID_Plato: newId, Activo_Dia: true });
-        saveData(current);
-    },
-    deletePlato: async (id: number) => {
-        const current = loadData();
-        saveData(current.filter(p => p.ID_Plato !== id));
-    },
-    setMenuPrice: async (price: number) => {
-        const config = getActiveConfig();
-        localStorage.setItem(`${config.id}_price`, price.toString());
-    },
+    getPlatos,
+    getMenuPrice,
+    updatePlato,
+    updatePlatosOrder,
+    addPlato,
+    deletePlato,
+    setMenuPrice,
     translateText,
     analyzeDish,
     generateAppConfig, 
@@ -224,3 +303,4 @@ export default {
         throw new Error('Credenciales incorrectas');
     }
 };
+

@@ -1,0 +1,24 @@
+{
+  "collections": [
+    {
+      "name": "platos",
+      "description": "Dishes for the restaurant",
+      "securityRules": {
+        "read": "true",
+        "create": "true",
+        "update": "true",
+        "delete": "true"
+      }
+    },
+    {
+      "name": "config",
+      "description": "Restaurant configuration, like menu price",
+      "securityRules": {
+        "read": "true",
+        "create": "true",
+        "update": "true",
+        "delete": "true"
+      }
+    }
+  ]
+}
