@@ -173,8 +173,10 @@ export const generateAppConfig = async (prompt: string, fileData: string | null,
 };
 
 
-const getPlatosPath = () => `restaurants/${getActiveConfig().id}/platos`;
-const getConfigPath = () => `restaurants/${getActiveConfig().id}`;
+let _apiAppId = "";
+export const setApiAppId = (id: string) => { _apiAppId = id; };
+const getPlatosPath = () => `restaurants/${_apiAppId || getActiveConfig().id}/platos`;
+const getConfigPath = () => `restaurants/${_apiAppId || getActiveConfig().id}`;
 
 const getApps = async (): Promise<RestaurantConfig[]> => {
     try {
@@ -322,6 +324,7 @@ const setMenuPrice = async (price: number) => {
 };
 
 export default {
+    setApiAppId,
     getApps,
     saveApp,
     deleteAppFromDb,

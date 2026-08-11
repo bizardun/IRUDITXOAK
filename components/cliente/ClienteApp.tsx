@@ -313,7 +313,7 @@ const ClienteApp: React.FC = () => {
         );
     };
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold uppercase tracking-widest text-xs animate-pulse">Cargando...</div>;
+    if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold uppercase tracking-widest text-xs animate-pulse">Cargando Carta...</div>;
 
     return (
         <div className="min-h-screen pb-16 px-4 sm:px-6 max-w-5xl mx-auto">

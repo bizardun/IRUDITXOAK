@@ -21,9 +21,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const refreshData = useCallback(async () => {
         try {
-            const [p, price] = await Promise.all([api.getPlatos(), api.getMenuPrice()]);
-            setPlatos(p);
-            setMenuPrice(price);
+            // Timeout fallback for Firebase hanging on mobile browsers
+            const fetchPromise = Promise.all([api.getPlatos(), api.getMenuPrice()]);
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout Firebase")), 8000));
+            
+            const [p, price] = await Promise.race([fetchPromise, timeoutPromise]) as [any, any];
+            setPlatos(p || []);
+            setMenuPrice(price || 0);
+        } catch (error) {
+            console.error("Error in refreshData:", error);
         } finally {
             setLoading(false);
         }

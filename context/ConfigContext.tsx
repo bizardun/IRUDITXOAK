@@ -25,7 +25,11 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const isOwnerUrl = searchParams.get('admin') === 'true';
     const isMasterAdmin = !isClientUrl && !isOwnerUrl;
 
-    const [config, setConfigState] = useState<RestaurantConfig>(getActiveConfig());
+    const [config, setConfigState] = useState<RestaurantConfig>(() => {
+        const init = getActiveConfig();
+        api.setApiAppId(init.id);
+        return init;
+    });
     const [isFactoryMode, setIsFactoryMode] = useState(isMasterAdmin);
     const [showMasterPanelButton, setShowMasterPanelButton] = useState(isMasterAdmin);
     const [availableApps, setAvailableApps] = useState<RestaurantConfig[]>([bolinaConfig]);
@@ -65,7 +69,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     if (lastAppId) {
                         const app = apps.find(a => a.id === lastAppId);
                         if (app) {
-                            setConfigState(app);
+                            api.setApiAppId(app.id); setConfigState(app);
                         }
                     }
                     setIsFactoryMode(false);
@@ -82,7 +86,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         try {
             localStorage.setItem(CURRENT_APP_KEY, id);
             const selectedApp = availableApps.find(a => a.id === id) || bolinaConfig;
-            setConfigState(selectedApp);
+            api.setApiAppId(selectedApp.id); setConfigState(selectedApp);
             setIsFactoryMode(false);
         } catch (e) {
             console.error("Error cambiando de app:", e);
