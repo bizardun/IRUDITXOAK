@@ -173,12 +173,47 @@ export const generateAppConfig = async (prompt: string, fileData: string | null,
 };
 
 
-const PLATOS_COLLECTION = 'platos';
-const CONFIG_DOC = 'config/main';
+const getPlatosPath = () => `restaurants/${getActiveConfig().id}/platos`;
+const getConfigPath = () => `restaurants/${getActiveConfig().id}`;
+
+const getApps = async (): Promise<RestaurantConfig[]> => {
+    try {
+        const querySnapshot = await getDocs(collection(db, 'restaurants'));
+        const apps = querySnapshot.docs.map(doc => doc.data() as RestaurantConfig);
+        return apps;
+    } catch (e) {
+        console.error("Error fetching apps from Firebase:", e);
+        return [];
+    }
+};
+
+const saveApp = async (app: RestaurantConfig) => {
+    try {
+        await setDoc(doc(db, 'restaurants', app.id), app);
+        // Also save initial platos
+        const batch = writeBatch(db);
+        app.initialPlatos.forEach(p => {
+            const docRef = doc(collection(db, `restaurants/${app.id}/platos`), p.ID_Plato.toString());
+            batch.set(docRef, p);
+        });
+        await batch.commit();
+    } catch (e) {
+        console.error("Error saving app:", e);
+    }
+};
+
+const deleteAppFromDb = async (id: string) => {
+    try {
+        // In a real app we'd delete subcollections first. For this scale, it's fine.
+        await deleteDoc(doc(db, 'restaurants', id));
+    } catch (e) {
+        console.error("Error deleting app:", e);
+    }
+};
 
 const getPlatos = async (): Promise<Plato[]> => {
     try {
-        const querySnapshot = await getDocs(collection(db, PLATOS_COLLECTION));
+        const querySnapshot = await getDocs(collection(db, getPlatosPath()));
         let platos = querySnapshot.docs.map(doc => doc.data() as Plato);
         
         if (platos.length === 0) {
@@ -198,9 +233,10 @@ const getPlatos = async (): Promise<Plato[]> => {
                 } catch(e) {}
             }
             platos = initialData;
+            
             const batch = writeBatch(db);
             platos.forEach(p => {
-                const docRef = doc(collection(db, PLATOS_COLLECTION), p.ID_Plato.toString());
+                const docRef = doc(collection(db, getPlatosPath()), p.ID_Plato.toString());
                 batch.set(docRef, p);
             });
             await batch.commit();
@@ -217,7 +253,7 @@ const getPlatos = async (): Promise<Plato[]> => {
 
 const getMenuPrice = async (): Promise<number> => {
     try {
-        const docSnap = await getDoc(doc(db, CONFIG_DOC));
+        const docSnap = await getDoc(doc(db, getConfigPath()));
         if (docSnap.exists() && docSnap.data().menuPrice !== undefined) {
             return parseFloat(docSnap.data().menuPrice);
         }
@@ -228,7 +264,7 @@ const getMenuPrice = async (): Promise<number> => {
             if (stored) fallbackPrice = parseFloat(stored);
         }
         // Save it to firebase
-        await setDoc(doc(db, CONFIG_DOC), { menuPrice: fallbackPrice }, { merge: true });
+        await setDoc(doc(db, getConfigPath()), { menuPrice: fallbackPrice }, { merge: true });
         return fallbackPrice;
     } catch (e) {
         console.error("Error fetching menu price:", e);
@@ -238,7 +274,7 @@ const getMenuPrice = async (): Promise<number> => {
 
 const updatePlato = async (id: number, data: Partial<Plato>) => {
     try {
-        const docRef = doc(db, PLATOS_COLLECTION, id.toString());
+        const docRef = doc(db, getPlatosPath(), id.toString());
         await updateDoc(docRef, data);
     } catch (e) {
         console.error("Error updating plato:", e);
@@ -249,9 +285,7 @@ const updatePlatosOrder = async (newOrder: Plato[]) => {
     try {
         const batch = writeBatch(db);
         newOrder.forEach((p, index) => {
-            const docRef = doc(db, PLATOS_COLLECTION, p.ID_Plato.toString());
-            // Optionally, we could add an order field if we want custom ordering.
-            // But since ID_Plato is preserved, we just update all if needed.
+            const docRef = doc(db, getPlatosPath(), p.ID_Plato.toString());
             batch.set(docRef, p, { merge: true }); 
         });
         await batch.commit();
@@ -265,7 +299,7 @@ const addPlato = async (plato: any) => {
         const currentPlatos = await getPlatos();
         const newId = Math.max(...currentPlatos.map(p => p.ID_Plato), 0) + 1;
         const newPlato = { ...plato, ID_Plato: newId, Activo_Dia: true };
-        await setDoc(doc(db, PLATOS_COLLECTION, newId.toString()), newPlato);
+        await setDoc(doc(db, getPlatosPath(), newId.toString()), newPlato);
     } catch (e) {
         console.error("Error adding plato:", e);
     }
@@ -273,7 +307,7 @@ const addPlato = async (plato: any) => {
 
 const deletePlato = async (id: number) => {
     try {
-        await deleteDoc(doc(db, PLATOS_COLLECTION, id.toString()));
+        await deleteDoc(doc(db, getPlatosPath(), id.toString()));
     } catch (e) {
         console.error("Error deleting plato:", e);
     }
@@ -281,13 +315,17 @@ const deletePlato = async (id: number) => {
 
 const setMenuPrice = async (price: number) => {
     try {
-        await setDoc(doc(db, CONFIG_DOC), { menuPrice: price }, { merge: true });
+        await setDoc(doc(db, getConfigPath()), { menuPrice: price }, { merge: true });
     } catch (e) {
         console.error("Error setting menu price:", e);
     }
 };
 
 export default {
+    getApps,
+    saveApp,
+    deleteAppFromDb,
+
     getPlatos,
     getMenuPrice,
     updatePlato,

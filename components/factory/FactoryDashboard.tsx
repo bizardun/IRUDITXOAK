@@ -15,6 +15,9 @@ const IconDownload = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} x
 const IconEye = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>;
 
 export default function FactoryDashboard() {
+    const isAiStudio = typeof window !== 'undefined' && (window.location.hostname.includes('.run.app') || window.location.hostname === 'localhost');
+    const [isUnlocked, setIsUnlocked] = useState(isAiStudio);
+    const [password, setPassword] = useState('');
     const { availableApps, loadApp, createApp, deleteApp, exitFactory } = useConfig();
     const [newName, setNewName] = useState('');
     const [prompt, setPrompt] = useState('');
@@ -134,6 +137,41 @@ export default function FactoryDashboard() {
         }
     };
 
+    
+    if (!isUnlocked) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+                <div className="bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl w-full max-w-sm text-center">
+                    <div className="w-16 h-16 bg-slate-700 rounded-2xl mx-auto flex items-center justify-center mb-6">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-300"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </div>
+                    <h2 className="text-xl font-bold text-white mb-2">Acceso Maestro</h2>
+                    <p className="text-slate-400 text-sm mb-6">Panel de control SaaS multitenant</p>
+                    
+                    <input 
+                        type="password" 
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        placeholder="Contraseña maestra"
+                        className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white mb-4 text-center focus:border-emerald-500 outline-none"
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                                if (password === 'admin123') setIsUnlocked(true);
+                                else alert('Contraseña incorrecta');
+                            }
+                        }}
+                    />
+                    <button 
+                        onClick={() => password === 'admin123' ? setIsUnlocked(true) : alert('Contraseña incorrecta')}
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-lg font-bold transition-colors"
+                    >
+                        Desbloquear Panel
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-slate-900 text-white font-sans p-4 sm:p-8 relative">
             
@@ -208,8 +246,8 @@ export default function FactoryDashboard() {
                         {isDeleteMode && <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-center text-sm font-bold animate-fade-in">MODO ELIMINACIÓN: Selecciona la aplicación que deseas borrar permanentemente.</div>}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {availableApps.map(app => (
-                                <div key={app.id} onClick={() => !isDeleteMode && loadApp(app.id)} className={`group relative rounded-xl p-6 border transition-all cursor-pointer shadow-lg flex flex-col justify-between ${isDeleteMode ? 'bg-slate-800 border-red-500/50 ring-2 ring-red-500/20' : 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:shadow-blue-900/20 hover:-translate-y-1'}`}>
+                            {availableApps.map((app, index) => (
+                                <div key={`${app.id}-${index}`} onClick={() => !isDeleteMode && loadApp(app.id)} className={`group relative rounded-xl p-6 border transition-all cursor-pointer shadow-lg flex flex-col justify-between ${isDeleteMode ? 'bg-slate-800 border-red-500/50 ring-2 ring-red-500/20' : 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:shadow-blue-900/20 hover:-translate-y-1'}`}>
                                     {isDeleteMode && app.id !== 'bolina_viejo_v1' && (
                                         <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-[2px] z-50 rounded-xl flex items-center justify-center animate-fade-in">
                                             <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(app.id); }} className={`${confirmDeleteId === app.id ? 'bg-red-700 scale-110 border-red-300 animate-pulse' : 'bg-red-600 hover:bg-red-500 border-red-400 hover:scale-105'} text-white px-6 py-3 rounded-full font-bold shadow-xl transform transition-all flex items-center gap-2 border-2`}>
@@ -221,7 +259,7 @@ export default function FactoryDashboard() {
 
                                     <div>
                                         <div className="flex justify-between items-start mb-4 opacity-100">
-                                             <div className="w-14 h-14 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl flex items-center justify-center text-3xl shadow-inner border border-slate-600/50">{app.name.charAt(0).toUpperCase()}</div>
+                                             <div className="w-14 h-14 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl flex items-center justify-center text-3xl shadow-inner border border-slate-600/50">{(app?.name || 'A').charAt(0).toUpperCase()}</div>
                                             {app.theme && <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full border ${app.theme.style === 'modern' ? 'bg-blue-900/30 text-blue-400 border-blue-500/30' : app.theme.style === 'fresh' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-500/30' : 'bg-amber-900/30 text-amber-400 border-amber-500/30'}`}>{app.theme.style}</span>}
                                         </div>
                                         <div className="space-y-1 mb-4"><h3 className="font-bold text-lg text-white leading-tight truncate pr-4">{app.name}</h3>{app.slogan && <p className="text-slate-400 text-xs truncate">{app.slogan}</p>}</div>

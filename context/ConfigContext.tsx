@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { RestaurantConfig, ThemeConfig } from '../types';
 import { bolinaConfig, getActiveConfig } from '../config/restaurant';
@@ -17,42 +16,52 @@ interface ConfigContextType {
 }
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
-
 const APPS_STORAGE_KEY = 'global_apps_registry';
 const CURRENT_APP_KEY = 'current_active_app_id';
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const isClientUrl = typeof window !== 'undefined' && window.location.search.includes('client=true');
-    const isMasterAdmin = !isClientUrl;
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+    const isClientUrl = searchParams.get('client') === 'true';
+    const isOwnerUrl = searchParams.get('admin') === 'true';
+    const isMasterAdmin = !isClientUrl && !isOwnerUrl;
 
-    // Estado inicial seguro usando la configuración activa real
     const [config, setConfigState] = useState<RestaurantConfig>(getActiveConfig());
-    
-    // Inicializamos en true SOLO si es master admin. Si no, arranca directo en la app.
     const [isFactoryMode, setIsFactoryMode] = useState(isMasterAdmin);
     const [showMasterPanelButton, setShowMasterPanelButton] = useState(isMasterAdmin);
-    
     const [availableApps, setAvailableApps] = useState<RestaurantConfig[]>([bolinaConfig]);
 
-    // Al montar, sincronizamos la lista de apps disponibles para el dashboard
     useEffect(() => {
-        const loadRegistry = () => {
+        const loadRegistry = async () => {
             try {
+                let fbApps = await api.getApps();
+                if (fbApps.length === 0) {
+                   fbApps = [bolinaConfig];
+                }
+                
                 const savedApps = localStorage.getItem(APPS_STORAGE_KEY);
-                let apps = [bolinaConfig];
+                let apps = [...fbApps];
                 
                 if (savedApps) {
                     const parsed = JSON.parse(savedApps);
                     const others = Array.isArray(parsed) 
-                        ? parsed.filter((a: any) => a.id !== bolinaConfig.id)
+                         ? parsed.filter((a: any) => a.id !== bolinaConfig.id && !fbApps.some(fba => fba.id === a.id))
                         : [];
-                    apps = [bolinaConfig, ...others];
+                    for (const a of others) {
+                        await api.saveApp(a);
+                        apps.push(a);
+                    }
+                    localStorage.removeItem(APPS_STORAGE_KEY);
                 }
+                
+                if (!apps.some(a => a.id === bolinaConfig.id)) {
+                    apps.unshift(bolinaConfig);
+                }
+                
                 setAvailableApps(apps);
 
-                // Si no somos admin master, forzamos cargar la última app usada o Boliña
                 if (!isMasterAdmin) {
-                    const lastAppId = localStorage.getItem(CURRENT_APP_KEY);
+                    const appIdParam = searchParams.get('app');
+                    const lastAppId = appIdParam || localStorage.getItem(CURRENT_APP_KEY);
                     if (lastAppId) {
                         const app = apps.find(a => a.id === lastAppId);
                         if (app) {
@@ -71,14 +80,9 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const loadApp = (id: string) => {
         try {
-            // Persistir selección
             localStorage.setItem(CURRENT_APP_KEY, id);
-            
-            // Actualizar estado del contexto
             const selectedApp = availableApps.find(a => a.id === id) || bolinaConfig;
             setConfigState(selectedApp);
-            
-            // Salir del modo fábrica para mostrar la app
             setIsFactoryMode(false);
         } catch (e) {
             console.error("Error cambiando de app:", e);
@@ -88,18 +92,15 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const createApp = async (name: string, prompt: string, fileData: string | null, mimeType: string | null, theme: ThemeConfig) => {
         try {
-            // 1. Generar ID único seguro
             const timestamp = Date.now();
             const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
             const newId = `${safeName}_${timestamp}`;
 
-            // 2. Generar datos usando IA si hay prompt o archivo
             let newPlatos: any[] = [];
             let newSlogan = '';
 
             if (prompt || fileData) {
                 try {
-                   // Llamada libre a la IA, sin forzar lista maestra
                    const aiConfig = await api.generateAppConfig(prompt, fileData, mimeType);
                    newPlatos = aiConfig.initialPlatos;
                    newSlogan = aiConfig.slogan;
@@ -108,11 +109,8 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                    alert("La IA tuvo problemas generando el menú. Se creará una app vacía.");
                    newPlatos = [];
                 }
-            } else {
-                newPlatos = [];
             }
 
-            // 3. Crear nueva configuración
             const newApp: RestaurantConfig = {
                 id: newId,
                 name: name,
@@ -121,60 +119,40 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 initialPlatos: newPlatos
             };
 
-            // 4. Actualizar lista de apps disponibles
-            setAvailableApps(prev => {
-                const updated = [...prev, newApp];
-                // Guardar registro
-                const registryToSave = updated.filter(a => a.id !== bolinaConfig.id);
-                localStorage.setItem(APPS_STORAGE_KEY, JSON.stringify(registryToSave));
-                return updated;
-            });
+            await api.saveApp(newApp);
             
-            // 5. Establecer como activa y cargar
+            setAvailableApps(prev => [...prev, newApp]);
+            
             localStorage.setItem(CURRENT_APP_KEY, newId);
             setConfigState(newApp);
             setIsFactoryMode(false);
-
         } catch (e) {
             console.error("Error creando app:", e);
-            throw e; // Lanzar para que el UI lo maneje
+            throw e;
         }
     };
 
-    const deleteApp = useCallback((id: string) => {
+    const deleteApp = useCallback(async (id: string) => {
         if (id === bolinaConfig.id) {
             alert("No se puede eliminar la aplicación Maestra.");
             return;
         }
-
         try {
-            // 1. Actualización SÍNCRONA del LocalStorage (Fuente de Verdad)
-            const savedAppsRaw = localStorage.getItem(APPS_STORAGE_KEY);
-            const savedApps: RestaurantConfig[] = savedAppsRaw ? JSON.parse(savedAppsRaw) : [];
+            await api.deleteAppFromDb(id);
             
-            // Filtramos la app a borrar
-            const newSavedApps = savedApps.filter(a => a.id !== id);
-            
-            // Guardamos inmediatamente la nueva lista limpia
-            localStorage.setItem(APPS_STORAGE_KEY, JSON.stringify(newSavedApps));
-
-            // 2. Limpiamos datos específicos de la app
             localStorage.removeItem(id);
             localStorage.removeItem(`${id}_price`);
-
-            // 3. Actualizamos el estado visual de React
+            
             setAvailableApps(prev => prev.filter(a => a.id !== id));
-
-            // 4. Si borramos la app que estaba activa, volvemos a la Master sin recargar página
+            
             const currentActiveId = localStorage.getItem(CURRENT_APP_KEY);
             if (currentActiveId === id) {
                 localStorage.setItem(CURRENT_APP_KEY, bolinaConfig.id);
                 setConfigState(bolinaConfig);
             }
-
         } catch (e) {
             console.error("Error eliminando app:", e);
-            alert("Error al eliminar la aplicación del almacenamiento.");
+            alert("Error al eliminar la aplicación.");
         }
     }, []);
 

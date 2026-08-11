@@ -15,7 +15,7 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
     const [downloading, setDownloading] = useState(false);
 
     useEffect(() => {
-        let baseUrl = window.location.origin + window.location.pathname + "?client=true";
+        let baseUrl = window.location.origin + window.location.pathname + "?app=" + config.id + "&client=true";
         setCleanUrl(baseUrl);
 
         const now = new Date();

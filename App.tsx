@@ -20,7 +20,7 @@ const MainLayout = () => {
         }
         return false;
     });
-    const hasAdminAccess = showMasterPanelButton || isAdminMode;
+    const hasAdminAccess = showMasterPanelButton || (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === 'true');
 
     useEffect(() => {
         document.title = `${config.name} - Carta Digital`;
