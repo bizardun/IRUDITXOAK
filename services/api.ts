@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Plato, RestaurantConfig, Alergeno } from '../types';
-import { getActiveConfig } from '../config/restaurant';
+import { getActiveConfig, bolinaConfig } from '../config/restaurant';
 import { db } from './firebase';
 import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 
@@ -181,7 +181,10 @@ const getConfigPath = () => `restaurants/${_apiAppId || getActiveConfig().id}`;
 const getApps = async (): Promise<RestaurantConfig[]> => {
     try {
         const querySnapshot = await getDocs(collection(db, 'restaurants'));
-        const apps = querySnapshot.docs.map(doc => doc.data() as RestaurantConfig);
+        const apps = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return { id: doc.id, ...data } as RestaurantConfig;
+        }).filter(app => app.name); // Only return apps that have a name (not just menuPrice stubs)
         return apps;
     } catch (e) {
         console.error("Error fetching apps from Firebase:", e);
@@ -221,7 +224,7 @@ const getPlatos = async (): Promise<Plato[]> => {
         if (platos.length === 0) {
             console.log('Seeding initial platos...');
             const config = getActiveConfig();
-            let initialData = config.initialPlatos;
+            let initialData = config.initialPlatos && config.initialPlatos.length > 0 ? config.initialPlatos : bolinaConfig.initialPlatos;
             if (typeof window !== 'undefined' && window.localStorage) {
                 try {
                     const stored = window.localStorage.getItem(config.id);
@@ -234,7 +237,7 @@ const getPlatos = async (): Promise<Plato[]> => {
                     }
                 } catch(e) {}
             }
-            platos = initialData;
+            platos = initialData || [];
             
             const batch = writeBatch(db);
             platos.forEach(p => {
