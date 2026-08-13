@@ -90,7 +90,9 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
     const groupedPlatos = useMemo(() => {
         const groups: Record<string, any[]> = {};
         const filtered = platos.filter(p => {
-            if (mode === 'menu') return p.Categoria.includes('MENU') || (p.Rol_Menu && p.Rol_Menu !== 'RACION');
+            if (mode === 'menu') {
+                return p.Rol_Menu === 'PRIMERO' || p.Rol_Menu === 'SEGUNDO' || p.Rol_Menu === 'POSTRE';
+            }
             return p.Categoria.includes('CARTA');
         });
         filtered.forEach(p => {
