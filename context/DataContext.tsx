@@ -20,19 +20,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
 
     const refreshData = useCallback(async () => {
-        try {
-            // Timeout fallback for Firebase hanging on mobile browsers
-            const fetchPromise = Promise.all([api.getPlatos(), api.getMenuPrice()]);
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout Firebase")), 8000));
-            
-            const [p, price] = await Promise.race([fetchPromise, timeoutPromise]) as [any, any];
-            setPlatos(p || []);
-            setMenuPrice(price || 0);
-        } catch (error) {
-            console.error("Error in refreshData:", error);
-        } finally {
-            setLoading(false);
-        }
+        // Now handled by realtime subscriptions
     }, []);
 
     // Optimistic update helper
@@ -45,7 +33,35 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await api.updatePlatosOrder(newOrder);
     };
 
-    useEffect(() => { refreshData(); }, []);
+    useEffect(() => {
+        let isFirstLoad = true;
+        
+        const unsubPlatos = api.subscribeToPlatos((newPlatos) => {
+            setPlatos(newPlatos);
+            if (isFirstLoad) {
+                setLoading(false);
+                isFirstLoad = false;
+            }
+        });
+        
+        const unsubPrice = api.subscribeToMenuPrice((newPrice) => {
+            setMenuPrice(newPrice);
+        });
+
+        // Also fallback to set loading false after 8s in case network hangs and cache is empty
+        const timeout = setTimeout(() => {
+            if (isFirstLoad) {
+                setLoading(false);
+                isFirstLoad = false;
+            }
+        }, 8000);
+
+        return () => {
+            unsubPlatos();
+            unsubPrice();
+            clearTimeout(timeout);
+        };
+    }, []);
 
     return (
         <DataContext.Provider value={{ platos, menuPrice, loading, refreshData, updateLocalPlato, reorderPlatos }}>

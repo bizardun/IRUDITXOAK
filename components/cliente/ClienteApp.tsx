@@ -107,12 +107,6 @@ const ClienteApp: React.FC = () => {
     const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({});
 
     useEffect(() => { 
-        refreshData(); 
-        const interval = setInterval(() => refreshData(), 5000); 
-        return () => clearInterval(interval); 
-    }, [refreshData]);
-
-    useEffect(() => { 
         if (!showAllergens) setSelectedAllergens([]); 
     }, [showAllergens]);
 

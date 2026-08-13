@@ -3,7 +3,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { Plato, RestaurantConfig, Alergeno } from '../types';
 import { getActiveConfig, bolinaConfig } from '../config/restaurant';
 import { db } from './firebase';
-import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 
 
 const apiKey = typeof process !== 'undefined' && process.env && process.env.API_KEY
@@ -277,6 +277,34 @@ const getMenuPrice = async (): Promise<number> => {
     }
 };
 
+const subscribeToPlatos = (callback: (platos: Plato[]) => void) => {
+    return onSnapshot(collection(db, getPlatosPath()), (querySnapshot) => {
+        const platos = querySnapshot.docs.map(doc => doc.data() as Plato);
+        if (platos.length > 0) {
+            platos.sort((a, b) => a.ID_Plato - b.ID_Plato);
+            callback(platos);
+        } else {
+            // Collection is empty, trigger the seeding logic
+            getPlatos().catch(e => console.error("Error seeding platos:", e));
+        }
+    }, (error) => {
+        console.error("Error in platos subscription:", error);
+    });
+};
+
+const subscribeToMenuPrice = (callback: (price: number) => void) => {
+    return onSnapshot(doc(db, getConfigPath()), (docSnap) => {
+        if (docSnap.exists() && docSnap.data().menuPrice !== undefined) {
+            callback(parseFloat(docSnap.data().menuPrice));
+        } else {
+            // Price doesn't exist, trigger seeding
+            getMenuPrice().catch(e => console.error("Error seeding price:", e));
+        }
+    }, (error) => {
+        console.error("Error in menu price subscription:", error);
+    });
+};
+
 const updatePlato = async (id: number, data: Partial<Plato>) => {
     try {
         const docRef = doc(db, getPlatosPath(), id.toString());
@@ -334,6 +362,8 @@ export default {
 
     getPlatos,
     getMenuPrice,
+    subscribeToPlatos,
+    subscribeToMenuPrice,
     updatePlato,
     updatePlatosOrder,
     addPlato,
