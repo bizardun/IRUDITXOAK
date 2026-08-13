@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { IconChevronLeft } from '../icons';
+import { IconChevronLeft, FlagES, FlagEU, FlagEN, FlagFR, FlagDE, FlagIT } from '../icons';
 import { useConfig } from '../../context/ConfigContext';
 
 interface GestionQRProps {
@@ -111,6 +111,15 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
                                     <div className="w-64 h-64 bg-slate-100 flex items-center justify-center text-slate-400">Generando QR...</div>
                                 )}
                             </div>
+                        </div>
+                        
+                        <div className="flex gap-2.5 sm:gap-4 justify-center items-center opacity-80 print:opacity-100 pt-1.5 pb-1.5">
+                            <div className="w-9 h-6 sm:w-12 sm:h-8 rounded overflow-hidden shadow-sm"><FlagEU /></div>
+                            <div className="w-9 h-6 sm:w-12 sm:h-8 rounded overflow-hidden shadow-sm"><FlagEN /></div>
+                            <div className="w-9 h-6 sm:w-12 sm:h-8 rounded overflow-hidden shadow-sm"><FlagFR /></div>
+                            <div className="w-9 h-6 sm:w-12 sm:h-8 rounded overflow-hidden shadow-sm"><FlagDE /></div>
+                            <div className="w-9 h-6 sm:w-12 sm:h-8 rounded overflow-hidden shadow-sm"><FlagIT /></div>
+                            <div className="w-9 h-6 sm:w-12 sm:h-8 rounded overflow-hidden shadow-sm"><FlagES /></div>
                         </div>
 
                         <div className="space-y-2 max-w-md">

@@ -87,6 +87,10 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
         if (!showAllergens) setSelectedAllergens([]); 
     }, [showAllergens]);
 
+    useEffect(() => {
+        setExpandedCats({});
+    }, [mode]);
+
     const groupedPlatos = useMemo(() => {
         const groups: Record<string, any[]> = {};
         const filtered = platos.filter(p => {
@@ -112,7 +116,7 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
         });
     }, [groupedPlatos]);
     
-    const defaultExpanded = mode !== 'menu';
+    const defaultExpanded = false;
 
     const toggleCat = (cat: string) => {
         setExpandedCats(prev => {
@@ -312,14 +316,14 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
                                     className="w-full flex items-center px-4 py-3 gap-2 group relative"
                                 >
                                     <div className="p-1.5 w-[28px] flex-shrink-0"></div>
-                                    <div className={`${mode === 'carta' || mode === 'menu' ? 'w-[35%]' : 'flex-grow'} min-w-0 flex items-center gap-2 text-left`}>
+                                    <div className={`${mode === 'carta' ? 'w-[35%]' : 'flex-grow'} min-w-0 flex items-center gap-2 text-left`}>
                                         <span className={`w-2 h-2 rounded-full transition-colors ${isExpanded ? 'bg-amber-400 shadow-sm' : 'bg-slate-300'}`}></span>
                                         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 truncate">
                                             {(t.tipos as any)[key] || (key === 'PRIMERO' ? t.primerosPlatos : key === 'SEGUNDO' ? t.segundosPlatos : key)}
                                             <span className="text-[10px] opacity-40 ml-1">({groupedPlatos[key].length})</span>
                                         </h3>
                                     </div>
-                                    {(mode === 'carta' || mode === 'menu') && (
+                                    {mode === 'carta' && (
                                         <div className="flex-1 flex justify-center px-1">
                                             <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Añadir a Menú del Día</span>
                                         </div>
@@ -367,7 +371,7 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
                                                 <div className="cursor-grab active:cursor-grabbing p-1.5 text-slate-700 hover:text-blue-600 rounded transition-colors">
                                                     <IconSort width={16} height={16} />
                                                 </div>
-                                                <div className={`${mode === 'carta' || mode === 'menu' ? 'w-[35%]' : 'flex-grow'} min-w-0`}>
+                                                <div className={`${mode === 'carta' ? 'w-[35%]' : 'flex-grow'} min-w-0`}>
                                                     <p className={`text-sm font-medium leading-snug truncate ${isRestricted ? 'text-slate-500 line-through decoration-slate-400' : 'text-slate-800'}`}>{p.ES_Nombre}</p>
                                                     {(showAllergens || isRestricted) && hasAllergens && (
                                                         <div className="flex flex-row items-center gap-1 mt-1">
@@ -381,7 +385,7 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
                                                         </div>
                                                     )}
                                                 </div>
-                                                {(mode === 'carta' || mode === 'menu') && (
+                                                {mode === 'carta' && (
                                                     <div className="flex-1 flex justify-center px-1">
                                                         <select 
                                                             value={p.Rol_Menu || "NO"} 
