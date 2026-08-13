@@ -89,7 +89,7 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
                     <div className="flex-1 flex flex-col items-center justify-center w-full gap-8">
                         <div className="space-y-4">
                             {config.name.toLowerCase().includes('boliña') ? (
-                                <img src="/logo boliña sin fondo.jfif" alt={config.name} className="h-32 sm:h-48 mx-auto object-contain drop-shadow-md" />
+                                <img src="/logo boliña sin fondo.jfif" alt={config.name} className="h-24 sm:h-32 mx-auto object-contain mix-blend-multiply" />
                             ) : (
                                 <h1 className="text-4xl sm:text-6xl font-bold font-lora text-slate-900 tracking-tight leading-tight">
                                     {config.name}
