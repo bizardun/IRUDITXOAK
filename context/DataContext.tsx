@@ -48,18 +48,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setMenuPrice(newPrice);
         });
 
-        // Also fallback to set loading false after 8s in case network hangs and cache is empty
-        const timeout = setTimeout(() => {
-            if (isFirstLoad) {
-                setLoading(false);
-                isFirstLoad = false;
-            }
-        }, 8000);
-
         return () => {
             unsubPlatos();
             unsubPrice();
-            clearTimeout(timeout);
         };
     }, []);
 

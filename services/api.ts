@@ -278,14 +278,20 @@ const getMenuPrice = async (): Promise<number> => {
 };
 
 const subscribeToPlatos = (callback: (platos: Plato[]) => void) => {
-    return onSnapshot(collection(db, getPlatosPath()), (querySnapshot) => {
+    return onSnapshot(collection(db, getPlatosPath()), { includeMetadataChanges: true }, (querySnapshot) => {
         const platos = querySnapshot.docs.map(doc => doc.data() as Plato);
-        platos.sort((a, b) => a.ID_Plato - b.ID_Plato);
-        callback(platos);
         
-        if (platos.length === 0) {
-            // Collection is empty, trigger the seeding logic
-            getPlatos().catch(e => console.error("Error seeding platos:", e));
+        if (platos.length > 0) {
+            platos.sort((a, b) => a.ID_Plato - b.ID_Plato);
+            callback(platos);
+        } else {
+            // If cache is empty or server is empty, show initial data immediately
+            callback(getActiveConfig().initialPlatos || bolinaConfig.initialPlatos);
+            
+            // Only seed if we confirmed with the server that it's actually empty
+            if (!querySnapshot.metadata.fromCache) {
+                getPlatos().catch(e => console.error("Error seeding platos:", e));
+            }
         }
     }, (error) => {
         console.error("Error in platos subscription:", error);
@@ -293,13 +299,14 @@ const subscribeToPlatos = (callback: (platos: Plato[]) => void) => {
 };
 
 const subscribeToMenuPrice = (callback: (price: number) => void) => {
-    return onSnapshot(doc(db, getConfigPath()), (docSnap) => {
+    return onSnapshot(doc(db, getConfigPath()), { includeMetadataChanges: true }, (docSnap) => {
         if (docSnap.exists() && docSnap.data().menuPrice !== undefined) {
             callback(parseFloat(docSnap.data().menuPrice));
         } else {
             callback(16.50); // Fallback until seeded
-            // Price doesn't exist, trigger seeding
-            getMenuPrice().catch(e => console.error("Error seeding price:", e));
+            if (!docSnap.metadata.fromCache) {
+                getMenuPrice().catch(e => console.error("Error seeding price:", e));
+            }
         }
     }, (error) => {
         console.error("Error in menu price subscription:", error);
