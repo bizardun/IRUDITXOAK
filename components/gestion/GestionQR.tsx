@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import { IconChevronLeft, FlagES, FlagEU, FlagEN, FlagFR, FlagDE, FlagIT } from '../icons';
 import { useConfig } from '../../context/ConfigContext';
 
@@ -13,6 +14,8 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
     const [qrUrl, setQrUrl] = useState('');
     const [dateStr, setDateStr] = useState('');
     const [downloading, setDownloading] = useState(false);
+    const [downloadingCartel, setDownloadingCartel] = useState(false);
+    const cartelRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const originUrl = typeof window !== 'undefined' ? window.location.origin : 'https://tu-dominio.vercel.app';
@@ -34,8 +37,24 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
         return () => clearTimeout(timer);
     }, [cleanUrl]);
 
-    const handlePrint = () => {
-        window.print();
+    const handleDownloadCartel = async () => {
+        if (!cartelRef.current) return;
+        setDownloadingCartel(true);
+        try {
+            const canvas = await html2canvas(cartelRef.current, { scale: 2, useCORS: true, logging: false });
+            const url = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${config.id}-cartel.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error("Error descargando cartel", error);
+            alert("No se pudo descargar el cartel.");
+        } finally {
+            setDownloadingCartel(false);
+        }
     };
 
     const handleDownload = async () => {
@@ -71,18 +90,18 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
                     <div className="flex gap-2">
                         <button onClick={handleDownload} disabled={downloading} className="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-bold hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2 text-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                            {downloading ? '...' : 'Descargar PNG'}
+                            {downloading ? '...' : 'Descargar QR'}
                         </button>
-                        <button onClick={handlePrint} className="bg-slate-800 text-white px-4 py-2 rounded-lg font-bold hover:bg-slate-700 shadow transition-all flex items-center gap-2 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                            Imprimir Cartel
+                        <button onClick={handleDownloadCartel} disabled={downloadingCartel} className="bg-slate-800 text-white px-4 py-2 rounded-lg font-bold hover:bg-slate-700 shadow transition-all flex items-center gap-2 text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            {downloadingCartel ? '...' : 'Descargar Cartel'}
                         </button>
                     </div>
                 </div>
             </div>
 
             <div className="flex-1 flex justify-center p-4 sm:p-8 overflow-auto bg-slate-100">
-                <div className="bg-white shadow-2xl print:shadow-none w-full max-w-[210mm] aspect-[1/1.4142] sm:aspect-auto sm:min-h-[297mm] p-8 sm:p-16 flex flex-col items-center text-center relative border border-slate-200 print:border-none">
+                <div ref={cartelRef} className="bg-white shadow-2xl print:shadow-none w-full max-w-[210mm] aspect-[1/1.4142] sm:aspect-auto sm:min-h-[297mm] p-8 sm:p-16 flex flex-col items-center text-center relative border border-slate-200 print:border-none">
                     <div className="absolute top-0 left-0 w-full h-4 bg-amber-500 print:visible"></div>
                     <div className="absolute bottom-0 left-0 w-full h-4 bg-slate-800 print:visible"></div>
 
@@ -132,12 +151,7 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
                         </div>
                     </div>
 
-                    <div className="w-full flex justify-between items-end text-xs text-slate-400 border-t border-slate-100 pt-6 mt-8 font-mono">
-                        <div className="text-left">
-                            <p>Actualizado: {dateStr}</p>
-                            <p className="mt-1 text-slate-300 max-w-[200px] truncate">{cleanUrl}</p>
-                        </div>
-                    </div>
+
                 </div>
             </div>
              <style>{`
