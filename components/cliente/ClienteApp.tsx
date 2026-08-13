@@ -66,7 +66,7 @@ const DishItem: React.FC<DishItemProps> = ({
         <li className="list-none py-0.5 sm:py-2 border-b border-slate-50 last:border-0 animate-fade-in">
             <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 w-full overflow-hidden">
                 <div className={`flex-grow min-w-0 transition-opacity duration-300 ${isRestricted ? 'opacity-40' : ''}`}>
-                    <span className={`text-[13px] sm:text-base font-medium truncate block leading-tight ${isRestricted ? 'text-slate-500 line-through decoration-slate-400' : 'text-slate-800'}`}>
+                    <span className={`font-sans text-[13px] sm:text-base font-medium truncate block leading-tight ${isRestricted ? 'text-slate-500 line-through decoration-slate-400' : 'text-slate-800'}`}>
                         {name}
                     </span>
                 </div>
