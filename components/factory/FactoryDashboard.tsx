@@ -108,7 +108,7 @@ export default function FactoryDashboard() {
         setCopiedAdmin(false);
         setShowQr(false);
         setTimeout(() => {
-            const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://tu-dominio.vercel.app';
+            const baseUrl = 'https://ais-pre-i7k7exrqtpi6zwjsrpoplx-11277431321.europe-west2.run.app';
             setClientUrl(`${baseUrl}/?app=${app.id}&client=true`);
             setAdminUrl(`${baseUrl}/?app=${app.id}&admin=true`);
             setIsDeploying(false);
