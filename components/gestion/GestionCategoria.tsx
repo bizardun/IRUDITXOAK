@@ -112,9 +112,11 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
         });
     }, [groupedPlatos]);
     
+    const defaultExpanded = mode !== 'menu';
+
     const toggleCat = (cat: string) => {
         setExpandedCats(prev => {
-            const current = prev[cat] ?? true;
+            const current = prev[cat] ?? defaultExpanded;
             return { ...prev, [cat]: !current };
         });
     };
@@ -242,7 +244,7 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
         );
     };
 
-    const allCollapsed = sortedKeys.every(k => !expandedCats[k]);
+    const allCollapsed = sortedKeys.every(k => !(expandedCats[k] ?? defaultExpanded));
 
     return (
         <div className="max-w-5xl mx-auto p-2 sm:p-4 pb-20 relative">
@@ -301,7 +303,7 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
 
             <div className="space-y-3">
                 {sortedKeys.map(key => {
-                    const isExpanded = expandedCats[key] ?? true;
+                    const isExpanded = expandedCats[key] ?? defaultExpanded;
                     return (
                         <div key={key} className="bg-white rounded-xl shadow-sm border border-slate-100 transition-all relative">
                             <div className="sticky top-[64px] sm:top-[68px] z-20 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200 shadow-sm transition-colors hover:bg-slate-100/95 rounded-t-xl">
