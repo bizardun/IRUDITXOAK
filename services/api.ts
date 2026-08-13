@@ -280,10 +280,10 @@ const getMenuPrice = async (): Promise<number> => {
 const subscribeToPlatos = (callback: (platos: Plato[]) => void) => {
     return onSnapshot(collection(db, getPlatosPath()), (querySnapshot) => {
         const platos = querySnapshot.docs.map(doc => doc.data() as Plato);
-        if (platos.length > 0) {
-            platos.sort((a, b) => a.ID_Plato - b.ID_Plato);
-            callback(platos);
-        } else {
+        platos.sort((a, b) => a.ID_Plato - b.ID_Plato);
+        callback(platos);
+        
+        if (platos.length === 0) {
             // Collection is empty, trigger the seeding logic
             getPlatos().catch(e => console.error("Error seeding platos:", e));
         }
@@ -297,6 +297,7 @@ const subscribeToMenuPrice = (callback: (price: number) => void) => {
         if (docSnap.exists() && docSnap.data().menuPrice !== undefined) {
             callback(parseFloat(docSnap.data().menuPrice));
         } else {
+            callback(16.50); // Fallback until seeded
             // Price doesn't exist, trigger seeding
             getMenuPrice().catch(e => console.error("Error seeding price:", e));
         }
