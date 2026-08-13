@@ -90,7 +90,7 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
     const groupedPlatos = useMemo(() => {
         const groups: Record<string, any[]> = {};
         const filtered = platos.filter(p => {
-            if (mode === 'menu') return p.Rol_Menu && p.Rol_Menu !== 'RACION';
+            if (mode === 'menu') return p.Categoria.includes('MENU') || (p.Rol_Menu && p.Rol_Menu !== 'RACION');
             return p.Categoria.includes('CARTA');
         });
         filtered.forEach(p => {
@@ -315,7 +315,7 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
                                             <span className="text-[10px] opacity-40 ml-1">({groupedPlatos[key].length})</span>
                                         </h3>
                                     </div>
-                                    {mode === 'carta' && (
+                                    {(mode === 'carta' || mode === 'menu') && (
                                         <div className="flex-1 flex justify-center px-1">
                                             <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Añadir a Menú del Día</span>
                                         </div>
@@ -377,7 +377,7 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
                                                         </div>
                                                     )}
                                                 </div>
-                                                {mode === 'carta' && (
+                                                {(mode === 'carta' || mode === 'menu') && (
                                                     <div className="flex-1 flex justify-center px-1">
                                                         <select 
                                                             value={p.Rol_Menu || "NO"} 
