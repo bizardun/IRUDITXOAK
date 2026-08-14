@@ -331,7 +331,7 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
                                     </div>
                                     {mode === 'carta' && (
                                         <div className="flex-1 flex justify-center px-1">
-                                            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Añadir a Menú del Día</span>
+                                            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Menú día</span>
                                         </div>
                                     )}
                                     <div className="flex items-center gap-3 flex-shrink-0 justify-end opacity-0 pointer-events-none">

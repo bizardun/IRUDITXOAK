@@ -16,7 +16,7 @@ export default function GestionHome({ setView }: { setView: (v: any) => void }) 
         { id: 'menu', label: 'Menú del Día', icon: IconMenu, color: 'text-blue-600 border-blue-200 bg-blue-50' },
         { id: 'carta', label: 'Carta Principal', icon: IconBook, color: 'text-amber-600 border-amber-200 bg-amber-50' },
         { id: 'raciones', label: 'Raciones', icon: IconFood, color: 'text-emerald-600 border-emerald-200 bg-emerald-50' },
-        { id: 'qr', label: 'Imprimir QR / Cartel', icon: IconQR, color: 'text-slate-600 border-slate-200 bg-slate-50' },
+        { id: 'qr', label: 'Descargar QR / Cartel', icon: IconQR, color: 'text-slate-600 border-slate-200 bg-slate-50' },
     ];
 
     return (
