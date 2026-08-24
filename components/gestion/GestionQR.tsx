@@ -11,6 +11,8 @@ interface GestionQRProps {
 const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
     const { config } = useConfig();
     const [cleanUrl, setCleanUrl] = useState('');
+    const [adminCleanUrl, setAdminCleanUrl] = useState('');
+    const [adminQrUrl, setAdminQrUrl] = useState('');
     const [qrUrl, setQrUrl] = useState('');
     const [dateStr, setDateStr] = useState('');
     const [downloading, setDownloading] = useState(false);
@@ -20,7 +22,9 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
     useEffect(() => {
         const originUrl = typeof window !== 'undefined' ? window.location.origin : 'https://tu-dominio.vercel.app';
         const baseUrl = originUrl + "/?app=" + config.id + "&client=true";
+        const adminUrl = originUrl + "/?app=" + config.id + "&admin=true";
         setCleanUrl(baseUrl);
+        setAdminCleanUrl(adminUrl);
         const now = new Date();
         const day = now.getDate().toString().padStart(2, '0');
         const month = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -33,9 +37,11 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
         const timer = setTimeout(() => {
             const qrSource = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(cleanUrl)}&size=1000x1000&qzone=1&bgcolor=ffffff`;
             setQrUrl(qrSource);
+            const adminQrSource = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(adminCleanUrl)}&size=500x500&qzone=1&bgcolor=ffffff`;
+            setAdminQrUrl(adminQrSource);
         }, 500);
         return () => clearTimeout(timer);
-    }, [cleanUrl]);
+    }, [cleanUrl, adminCleanUrl]);
 
     const handleDownloadCartel = async () => {
         if (!cartelRef.current) return;
@@ -104,14 +110,16 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
                 </div>
             </div>
 
-            <div className="flex-1 flex justify-center p-4 sm:p-8 overflow-auto bg-slate-100">
+            <div className="flex-1 flex flex-col xl:flex-row items-center xl:items-start justify-center p-4 sm:p-8 gap-8 overflow-auto bg-slate-100">
                 <div ref={cartelRef} className="bg-white shadow-2xl print:shadow-none w-full max-w-[210mm] aspect-[1/1.4142] sm:aspect-auto sm:min-h-[297mm] p-8 sm:p-16 flex flex-col items-center text-center relative border border-slate-200 print:border-none">
                     <div className="absolute top-0 left-0 w-full h-4 bg-amber-500 print:visible"></div>
                     <div className="absolute bottom-0 left-0 w-full h-4 bg-slate-800 print:visible"></div>
 
                     <div className="flex-1 flex flex-col items-center justify-center w-full gap-8">
                         <div className="space-y-4">
-                            {config.name.toLowerCase().includes('boliña') ? (
+                            {config.name.toLowerCase().includes('kanala') ? (
+                                <img src="https://www.kanalabeach.eus/wp-content/uploads/2024/06/kanala-logos_LOGO-HORIZONTAL-zuria.png" alt={config.name} style={{filter: 'invert(1)'}} className="h-24 sm:h-32 mx-auto object-contain mb-4 sm:mb-6" />
+                            ) : config.name.toLowerCase().includes('boliña') ? (
                                 <img src="/logo boliña sin fondo.jfif" alt={config.name} className="h-32 sm:h-48 mx-auto object-contain drop-shadow-md" />
                             ) : (
                                 <h1 className="text-4xl sm:text-6xl font-bold font-lora text-slate-900 tracking-tight leading-tight">
@@ -156,6 +164,25 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
                     </div>
 
 
+                </div>
+                
+                {/* Admin Access Box (Not printed) */}
+                <div className="bg-white shadow-xl border border-slate-200 rounded-2xl p-6 w-full max-w-[210mm] xl:max-w-xs flex flex-col items-center text-center print:hidden">
+                    <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </div>
+                    <h3 className="font-bold text-xl text-slate-800 mb-2">Acceso Propietario</h3>
+                    <p className="text-slate-500 text-sm mb-6">Escanea este QR con tu móvil para acceder al panel de gestión y editar los platos desde cualquier lugar usando tu contraseña.</p>
+                    
+                    <div className="bg-slate-100 p-3 rounded-xl border border-slate-200 mb-4">
+                        {adminQrUrl ? (
+                            <img src={adminQrUrl} alt="QR Acceso Admin" className="w-48 h-48 mix-blend-multiply" />
+                        ) : (
+                            <div className="w-48 h-48 flex items-center justify-center text-slate-400 text-sm">Generando...</div>
+                        )}
+                    </div>
+                    
+                    <p className="text-xs font-mono text-slate-400 break-all px-4">{adminCleanUrl}</p>
                 </div>
             </div>
              <style>{`

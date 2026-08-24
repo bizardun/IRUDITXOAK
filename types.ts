@@ -22,6 +22,12 @@ export interface Plato {
     Rol_Menu: RolMenu;
     Es_Racion: boolean; 
     Alergenos: Alergeno[];
+    Descripcion?: string;
+    EU_Descripcion?: string;
+    EN_Descripcion?: string;
+    FR_Descripcion?: string;
+    DE_Descripcion?: string;
+    IT_Descripcion?: string;
     [key: string]: string | number | boolean | null | undefined | Alergeno[];
 }
 

@@ -59,7 +59,7 @@ const DishItem: React.FC<DishItemProps> = ({
         return p.Alergenos.some(a => selectedAllergens.includes(a));
     }, [p.Alergenos, selectedAllergens]);
 
-    const name = (p as any)[`${lang}_Nombre`] || p.ES_Nombre;
+    const name = (p as any)[`${lang.toUpperCase()}_Nombre`] || (p as any)[`${lang}_Nombre`] || p.ES_Nombre;
     const hasAllergens = allergensToDisplay.length > 0;
 
     return (
@@ -69,6 +69,16 @@ const DishItem: React.FC<DishItemProps> = ({
                     <span className={`font-sans text-[15px] sm:text-base font-medium truncate block leading-tight ${isRestricted ? 'text-slate-500 line-through decoration-slate-400' : 'text-slate-800'}`}>
                         {name}
                     </span>
+                    {((p as any).Descripcion || (p as any).EU_Descripcion || (p as any).EN_Descripcion) && (
+                        <p className={`text-xs sm:text-[13px] text-slate-500 mt-0.5 leading-snug ${isRestricted ? 'opacity-40' : ''}`}>
+                            {lang === 'es' ? (p as any).Descripcion :
+                             lang === 'eu' ? ((p as any).EU_Descripcion || (p as any).eu_Descripcion || (p as any).Descripcion) :
+                             lang === 'en' ? ((p as any).EN_Descripcion || (p as any).en_Descripcion || (p as any).Descripcion) :
+                             lang === 'fr' ? ((p as any).FR_Descripcion || (p as any).fr_Descripcion || (p as any).Descripcion) :
+                             lang === 'de' ? ((p as any).DE_Descripcion || (p as any).de_Descripcion || (p as any).Descripcion) :
+                             ((p as any).IT_Descripcion || (p as any).it_Descripcion || (p as any).Descripcion)}
+                        </p>
+                    )}
                 </div>
 
                 <div className="flex flex-row items-center gap-2 sm:gap-2.5 flex-shrink-0 ml-auto">
@@ -152,22 +162,31 @@ const ClienteApp: React.FC = () => {
         if (!showAllergens) return [];
         const activeSet = new Set<string>();
         let contextItems: Plato[] = [];
-        if (view === 'menu') {
-            contextItems = activePlatos.filter(p => p.Rol_Menu && p.Rol_Menu !== 'RACION');
+        const isKanala = config.name.toLowerCase().includes('kanala');
+        if (isKanala) {
+            contextItems = activePlatos.filter(p => p.Categoria.includes('CARTA'));
+            if (view !== 'menu' && view !== 'ALL') {
+                contextItems = contextItems.filter(p => p.Tipo === view);
+            }
         } else {
-            const isRaciones = view === 'raciones';
-            contextItems = activePlatos.filter(p => {
-                const inCarta = p.Categoria.includes('CARTA');
-                return isRaciones ? (inCarta && p.Es_Racion) : inCarta;
-            });
+            if (view === 'menu') {
+                contextItems = activePlatos.filter(p => p.Rol_Menu && p.Rol_Menu !== 'RACION');
+            } else {
+                const isRaciones = view === 'raciones';
+                contextItems = activePlatos.filter(p => {
+                    const inCarta = p.Categoria.includes('CARTA');
+                    return isRaciones ? (inCarta && p.Es_Racion) : inCarta;
+                });
+            }
         }
+        
         contextItems.forEach(p => {
             if (Array.isArray(p.Alergenos)) {
                 p.Alergenos.forEach(a => activeSet.add(a));
             }
         });
         return Array.from(activeSet).sort();
-    }, [activePlatos, view, showAllergens]);
+    }, [activePlatos, view, showAllergens, config.name]);
 
     const toggleCat = (cat: string) => {
         setExpandedCats(prev => ({ ...prev, [cat]: !prev[cat] }));
@@ -280,25 +299,35 @@ const ClienteApp: React.FC = () => {
     };
 
     const renderCartaOrRaciones = () => {
+        const isKanala = config.name.toLowerCase().includes('kanala');
         const isRaciones = view === 'raciones';
         const filtered = filteredPlatos.filter(p => {
             const inCarta = p.Categoria.includes('CARTA');
+            if (isKanala) return inCarta;
             if (isRaciones) return inCarta && p.Es_Racion;
             return inCarta;
         });
+        
         const groups: Record<string, any[]> = {};
         filtered.forEach(p => {
             const k = p.Tipo || 'OTROS';
             if (!groups[k]) groups[k] = [];
             groups[k].push(p);
         });
+        
         const order: TipoPlato[] = ['ENTRANTE', 'ENSALADA', 'ARROZ', 'MARISCO', 'PESCADO', 'CARNE', 'POSTRE'];
-        const sortedKeys = Object.keys(groups).sort((a, b) => {
+        let sortedKeys = Object.keys(groups).sort((a, b) => {
             const ia = order.indexOf(a as TipoPlato);
             const ib = order.indexOf(b as TipoPlato);
             return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
         });
+        
+        if (isKanala && view !== 'menu' && view !== 'ALL') {
+            sortedKeys = sortedKeys.filter(k => k === view);
+        }
+
         if (filtered.length === 0 && selectedAllergens.length > 0) return <div className="text-center py-8 text-slate-400 italic font-bold uppercase">Sin resultados</div>;
+        if (sortedKeys.length === 0) return null;
         
         return (
             <div className="animate-fade-in max-w-3xl mx-auto space-y-0.5">
@@ -312,7 +341,9 @@ const ClienteApp: React.FC = () => {
     return (
         <div className="min-h-screen pb-16 px-4 sm:px-6 max-w-5xl mx-auto">
             <header className="pt-6 sm:pt-10 pb-4 text-center">
-                {config.name.toLowerCase().includes('boliña') ? (
+                {config.name.toLowerCase().includes('kanala') ? (
+                    <img src="https://www.kanalabeach.eus/wp-content/uploads/2024/06/kanala-logos_LOGO-HORIZONTAL-zuria.png" alt={config.name} style={{filter: 'invert(1)'}} className="h-16 sm:h-20 mx-auto object-contain mb-4 sm:mb-6" />
+                ) : config.name.toLowerCase().includes('boliña') ? (
                     <img src="/logo boliña sin fondo.jfif" alt={config.name} className="h-24 sm:h-32 mx-auto object-contain mb-1 sm:mb-3 drop-shadow-md" />
                 ) : (
                     <h1 className="text-4xl sm:text-6xl font-bold mb-1 sm:mb-3 tracking-tight text-slate-900 leading-tight">{config.name}</h1>
@@ -339,17 +370,40 @@ const ClienteApp: React.FC = () => {
                     ))}
                 </div>
 
-                <div className="bg-slate-100/80 p-1 rounded-2xl flex gap-1 mb-4 sm:mb-10 shadow-inner max-w-lg mx-auto">
-                    {[{ id: 'menu', label: t.menuDelDia, icon: IconMenu }, { id: 'carta', label: t.carta, icon: IconBook }, { id: 'raciones', label: t.raciones, icon: IconFood }].map(tab => (
-                        <button 
-                            key={tab.id} 
-                            onClick={() => setView(tab.id as any)} 
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-bold transition-all ${view === tab.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                            <tab.icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" /> <span className="whitespace-nowrap">{tab.label}</span>
-                        </button>
-                    ))}
-                </div>
+                {config.name.toLowerCase().includes('kanala') ? (
+                    <div className="flex overflow-x-auto no-scrollbar gap-2 mb-4 sm:mb-8 px-1 pb-2 snap-x max-w-3xl mx-auto">
+                        {[
+                            { id: 'menu', label: t.carta || 'Carta' },
+                            { id: 'ENTRANTE', label: t.tipos?.ENTRANTE || 'Entrantes' },
+                            { id: 'ENSALADA', label: t.tipos?.ENSALADA || 'Ensaladas' },
+                            { id: 'ARROZ', label: t.tipos?.ARROZ || 'Arroces' },
+                            { id: 'MARISCO', label: t.tipos?.MARISCO || 'Mariscos' },
+                            { id: 'PESCADO', label: t.tipos?.PESCADO || 'Pescados' },
+                            { id: 'CARNE', label: t.tipos?.CARNE || 'Carnes' },
+                            { id: 'POSTRE', label: t.tipos?.POSTRE || 'Postres' }
+                        ].map(tab => (
+                            <button 
+                                key={tab.id} 
+                                onClick={() => setView(tab.id as any)} 
+                                className={`flex-shrink-0 px-5 py-2.5 rounded-full text-[13px] sm:text-sm font-bold transition-all border snap-center ${view === tab.id ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                            >
+                                <span className="whitespace-nowrap uppercase tracking-wide">{tab.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="bg-slate-100/80 p-1 rounded-2xl flex gap-1 mb-4 sm:mb-10 shadow-inner max-w-lg mx-auto">
+                        {[{ id: 'menu', label: t.menuDelDia, icon: IconMenu }, { id: 'carta', label: t.carta, icon: IconBook }, { id: 'raciones', label: t.raciones, icon: IconFood }].map(tab => (
+                            <button 
+                                key={tab.id} 
+                                onClick={() => setView(tab.id as any)} 
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-bold transition-all ${view === tab.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                <tab.icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" /> <span className="whitespace-nowrap">{tab.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
 
                 <div className="flex justify-center mb-1">
                     <button onClick={() => setShowAllergens(!showAllergens)} className={`text-[13px] sm:text-sm font-bold px-6 py-2 rounded-full flex items-center gap-2 shadow-sm border transition-all ${showAllergens ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
@@ -362,7 +416,7 @@ const ClienteApp: React.FC = () => {
 
             <main className="bg-white p-3 sm:p-12 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border border-slate-100 relative min-h-[500px]">
                 <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${styles.gradient} opacity-50`}></div>
-                {view === 'menu' ? renderMenu() : renderCartaOrRaciones()}
+                {(!config.name.toLowerCase().includes('kanala') && view === 'menu') ? renderMenu() : renderCartaOrRaciones()}
                 <footer className="mt-12 sm:mt-20 pt-6 border-t border-slate-50 text-center text-[11px] sm:text-[12px] text-slate-200 uppercase tracking-widest font-black">
                     I.V.A. INCLUIDO • DATOS EN TIEMPO REAL
                 </footer>

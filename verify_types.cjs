@@ -1,5 +1,5 @@
 const { initializeApp } = require("firebase/app");
-const { getFirestore, collection, getDocs, updateDoc, doc } = require("firebase/firestore");
+const { getFirestore, doc, getDoc } = require("firebase/firestore");
 
 const firebaseConfig = {
   apiKey: "AIzaSyCvxipZmbXASjjZ-NvdrfUYKaZHcjwiUOk",
@@ -14,12 +14,10 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app, "ai-studio-gestinderestaura-0bf9c0e9-a516-4b52-ab72-7f00b5b37c6d");
 
 async function run() {
-  const querySnapshot = await getDocs(collection(db, 'restaurants/kanala-beach/platos'));
-  const platos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  
-  const tataki = platos.find(p => p.ES_Nombre === "TATAKI DE ATÚN ROJO");
-  console.log("Checking translations:", tataki.EU_Nombre, tataki.FR_Nombre);
-  
+  const docRef = doc(db, 'restaurants/kanala-beach/platos/1');
+  const d = await getDoc(docRef);
+  const p = d.data();
+  console.log("English translation check:", p.EN_Nombre, p.EN_Descripcion);
   process.exit(0);
 }
 
