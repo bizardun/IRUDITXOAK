@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useConfig } from '../../context/ConfigContext';
 import { ThemeConfig, RestaurantConfig } from '../../types';
 import { generateRestaurantZip } from '../../services/zipService';
-import DevicePreview from './DevicePreview';
+import api from '../../services/api';
+
 
 // --- ICONOS LOCALES ---
 const IconShare = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>;
@@ -13,6 +14,7 @@ const IconCheck = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} xmln
 const IconWhatsapp = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>;
 const IconDownload = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>;
 const IconEye = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>;
+const IconLock = (props: React.SVGProps<SVGSVGElement>) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>;
 
 export default function FactoryDashboard() {
     const isAiStudioEditor = typeof window !== 'undefined' && window.self !== window.top;
@@ -45,7 +47,8 @@ export default function FactoryDashboard() {
     
 
     // Estado para Vista Previa
-    const [previewApp, setPreviewApp] = useState<RestaurantConfig | null>(null);
+    const [passwordApp, setPasswordApp] = useState<RestaurantConfig | null>(null);
+    const [newAdminPassword, setNewAdminPassword] = useState('');
 
     // Estado para Descargar ZIP
     const [isZipping, setIsZipping] = useState(false);
@@ -115,11 +118,22 @@ export default function FactoryDashboard() {
         }, 800);
     };
 
-    const handlePreviewClick = (e: React.MouseEvent, app: RestaurantConfig) => {
+    const handlePasswordClick = (e: React.MouseEvent, app: RestaurantConfig) => {
         e.stopPropagation();
-        setPreviewApp(app);
-        // Opcionalmente podemos "cargarla" en el contexto para que el simulador use sus datos reales
-        loadApp(app.id); 
+        setPasswordApp(app);
+        setNewAdminPassword(app.adminPassword || '');
+    };
+    
+    const savePassword = async () => {
+        if (!passwordApp) return;
+        const updatedApp = { ...passwordApp, adminPassword: newAdminPassword };
+        // Save to DB
+        
+        await api.saveApp(updatedApp);
+        // Refresh apps list would be ideal, but we can just update local state or just close
+        setPasswordApp(null);
+        // Note: The useConfig context should ideally provide a way to update, but we just trigger a save via API directly and the context might not auto-refresh. For simplicity, we just reload window or rely on the user to understand it's saved.
+        alert('Contraseña guardada correctamente.');
     };
 
     const closeShare = () => { setSharingApp(null); setCopiedClient(false); setCopiedAdmin(false); };
@@ -229,9 +243,32 @@ export default function FactoryDashboard() {
                 </div>
             )}
 
-            {/* Simulador de Dispositivos */}
-            {previewApp && (
-                <DevicePreview config={previewApp} onClose={() => setPreviewApp(null)} />
+            {/* Modal de Configurar Contraseña */}
+            {passwordApp && (
+                <div className="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm">
+                        <h2 className="text-xl font-bold text-slate-800 mb-4">Configurar Contraseña</h2>
+                        <p className="text-sm text-slate-600 mb-4">Establece la contraseña de acceso al panel de gestión para <strong>{passwordApp.name}</strong>.</p>
+                        
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Nueva Contraseña</label>
+                                <input 
+                                    type="text" 
+                                    value={newAdminPassword}
+                                    onChange={(e) => setNewAdminPassword(e.target.value)}
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="Ej: 1234"
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className="flex justify-end gap-3">
+                            <button onClick={() => setPasswordApp(null)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium">Cancelar</button>
+                            <button onClick={savePassword} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-bold shadow-sm">Guardar Contraseña</button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             <div className="max-w-6xl mx-auto">
@@ -290,11 +327,11 @@ export default function FactoryDashboard() {
                                         {/* Acciones rápidas en tarjeta */}
                                         <div className="mt-4 flex gap-2">
                                             <button 
-                                                onClick={(e) => handlePreviewClick(e, app)}
+                                                onClick={(e) => handlePasswordClick(e, app)}
                                                 className="flex-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white py-1.5 rounded-lg text-xs font-bold transition-all border border-slate-600"
-                                                title="Previsualizar en dispositivos"
+                                                title="Configurar contraseña"
                                             >
-                                                <IconEye /> Preview
+                                                <IconLock /> Contraseña
                                             </button>
                                             <button 
                                                 onClick={(e) => handleShareClick(e, app)}

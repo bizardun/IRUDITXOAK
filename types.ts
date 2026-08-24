@@ -36,6 +36,7 @@ export interface RestaurantConfig {
     slogan: string;
     initialPlatos: Plato[];
     theme?: ThemeConfig;
+    adminPassword?: string;
 }
 
 export interface Language {

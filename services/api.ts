@@ -196,12 +196,14 @@ const saveApp = async (app: RestaurantConfig) => {
     try {
         await setDoc(doc(db, 'restaurants', app.id), app);
         // Also save initial platos
-        const batch = writeBatch(db);
-        app.initialPlatos.forEach(p => {
-            const docRef = doc(collection(db, `restaurants/${app.id}/platos`), p.ID_Plato.toString());
-            batch.set(docRef, p);
-        });
-        await batch.commit();
+        if (app.initialPlatos && Array.isArray(app.initialPlatos)) {
+            const batch = writeBatch(db);
+            app.initialPlatos.forEach(p => {
+                const docRef = doc(collection(db, `restaurants/${app.id}/platos`), p.ID_Plato.toString());
+                batch.set(docRef, p);
+            });
+            await batch.commit();
+        }
     } catch (e) {
         console.error("Error saving app:", e);
     }
@@ -381,7 +383,19 @@ export default {
     analyzeDish,
     generateAppConfig, 
     login: async (u: string, p: string) => {
-        if (u === 'admin' && p === '1234') return true;
+        const appId = _apiAppId || getActiveConfig().id;
+        try {
+            const snap = await getDoc(doc(db, 'restaurants', appId));
+            if (snap.exists()) {
+                const appData = snap.data();
+                const expectedPass = appData.adminPassword || '1234';
+                if (u === 'admin' && p === expectedPass) return true;
+            } else {
+                if (u === 'admin' && p === '1234') return true;
+            }
+        } catch(e) {
+            console.error('Login error:', e);
+        }
         throw new Error('Credenciales incorrectas');
     }
 };
