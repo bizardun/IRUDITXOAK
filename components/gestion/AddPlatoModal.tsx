@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useConfig } from '../../context/ConfigContext';
 import { languages, translations } from '../../constants';
 import { IconX, IconTrash, AllergenIcon } from '../icons';
 import api from '../../services/api';
@@ -8,7 +9,7 @@ import type { Plato, Alergeno } from '../../types';
 interface AddPlatoModalProps {
     isOpen: boolean;
     onClose: () => void;
-    mode: 'menu' | 'carta' | 'raciones';
+    mode: string;
     refreshData: () => Promise<void>;
     platoToEdit?: Plato | null;
 }
@@ -32,7 +33,7 @@ const ALLERGEN_LIST: { id: Alergeno; label: string }[] = [
 ];
 
 export default function AddPlatoModal({ isOpen, onClose, mode, refreshData, platoToEdit }: AddPlatoModalProps) {
-    const initialData = { ES_Nombre: '', Precio: '', Tipo: 'ENTRANTE' };
+    const initialData = { ES_Nombre: '', Precio: '', Tipo: ['ENTRANTE', 'ENSALADA', 'ARROZ', 'MARISCO', 'PESCADO', 'CARNE', 'POSTRE'].includes(mode) ? mode : 'ENTRANTE' };
     const [data, setData] = useState<any>(initialData);
     const [translationsData, setTranslationsData] = useState<Record<string, string>>({});
     const [selectedAllergens, setSelectedAllergens] = useState<Alergeno[]>([]);
@@ -114,7 +115,7 @@ export default function AddPlatoModal({ isOpen, onClose, mode, refreshData, plat
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-            <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in-up border border-slate-200 my-8">
+            <form onSubmit={handleSubmit} className={`rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in-up border my-8 ${isKanala ? "bg-neutral-900 border-white/20" : "bg-white border-slate-200"}`}>
                 <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                     <h3 className="text-xl font-bold font-lora text-slate-800">{isEditing ? 'Editar Plato' : 'Añadir Plato'}</h3>
                     <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600"><IconX/></button>
@@ -168,7 +169,7 @@ export default function AddPlatoModal({ isOpen, onClose, mode, refreshData, plat
                                     <label className="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-1 uppercase">
                                         <div className="w-3 h-2 overflow-hidden rounded-sm"><lang.flag /></div> {lang.name}
                                     </label>
-                                    <input type="text" value={translationsData[lang.code] || ''} onChange={e => setTranslationsData({...translationsData, [lang.code]: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-blue-500" placeholder={`Nombre en ${lang.name}`} />
+                                    <input type="text" value={translationsData[lang.code] || ''} onChange={e => setTranslationsData({...translationsData, [lang.code]: e.target.value})} className={`w-full border rounded-lg p-2 text-xs outline-none focus:border-blue-500 ${isKanala ? "bg-neutral-800 border-white/20 text-white" : "bg-white border-slate-200"}`} placeholder={`Nombre en ${lang.name}`} />
                                 </div>
                             ))}
                         </div>

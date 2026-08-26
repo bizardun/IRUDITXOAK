@@ -1,13 +1,15 @@
 const fs = require('fs');
 let content = fs.readFileSync('components/cliente/ClienteApp.tsx', 'utf8');
 
-const oldNameLogic = `    const name = (p as any)[\`\${lang}_Nombre\`] || p.ES_Nombre;`;
-const newNameLogic = `    const name = (p as any)[\`\${lang.toUpperCase()}_Nombre\`] || (p as any)[\`\${lang}_Nombre\`] || p.ES_Nombre;`;
+// 1. Update useState
+content = content.replace(
+    "const [view, setView] = useState<'menu' | 'carta' | 'raciones'>('menu');",
+    "const [view, setView] = useState<string>(config?.name?.toLowerCase().includes('kanala') ? 'ENTRANTE' : 'menu');"
+);
 
-if (content.includes(oldNameLogic)) {
-    content = content.replace(oldNameLogic, newNameLogic);
-    fs.writeFileSync('components/cliente/ClienteApp.tsx', content);
-    console.log("Patched Name Logic");
-} else {
-    console.log("Name Logic Not found");
-}
+// 2. Remove Carta tab
+const targetTab = "{ id: 'menu', label: t.carta || 'Carta' },";
+content = content.replace(targetTab, "");
+
+fs.writeFileSync('components/cliente/ClienteApp.tsx', content);
+console.log('ClienteApp patched!');

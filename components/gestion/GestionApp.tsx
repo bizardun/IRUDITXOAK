@@ -9,7 +9,7 @@ import { useConfig } from '../../context/ConfigContext';
 
 const GestionApp: React.FC = () => {
     
-    const [view, setView] = useState<'home' | 'menu' | 'carta' | 'raciones' | 'qr' | 'preview'>('home');
+    const [view, setView] = useState<string>('home');
     const { config } = useConfig();
 
         

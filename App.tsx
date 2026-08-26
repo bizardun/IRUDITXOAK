@@ -41,9 +41,12 @@ const MainLayout = () => {
         return <FactoryDashboard />;
     }
 
+    const isKanala = config.name.toLowerCase().includes('kanala');
+    
     return (
         <DataProvider key={config.id}>
-            <div className={`min-h-screen leading-tight ${fontClass} ${themeColors[themeStyle]}`}>
+            <div className={`min-h-screen leading-tight ${fontClass} ${isKanala ? 'bg-black text-white' : themeColors[themeStyle]}`}>
+            {isKanala && <style>{`body { background-color: black; }`}</style>}
                 {/* Navbar */}
                 {hasAdminAccess && (
                     <div className="print:hidden relative z-40 w-full bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm py-2 px-4">

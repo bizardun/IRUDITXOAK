@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useData } from '../../context/DataContext';
+import { useConfig } from '../../context/ConfigContext';
 import { translations } from '../../constants';
 import { IconChevronLeft, IconPlus, IconEdit, IconSort, IconArrowDown, IconAllergy, IconX } from '../icons';
 import { Switch } from '../ui/Switch';
@@ -27,7 +28,28 @@ const allergenColors: Record<string, string> = {
     CALAMARES: "bg-indigo-500"        
 };
 
-const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView: (v: any) => void }> = ({ mode, setView }) => {
+const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = ({ mode, setView }) => {
+    const { config } = useConfig();
+    const isKanala = config.name.toLowerCase().includes('kanala');
+    const tc = isKanala ? {
+        bg: 'bg-neutral-900',
+        cardBg: 'bg-neutral-800',
+        text: 'text-white',
+        textMuted: 'text-neutral-400',
+        border: 'border-white/10',
+        headerBg: 'bg-neutral-900',
+        inputBg: 'bg-neutral-900',
+        hover: 'hover:bg-white/5'
+    } : {
+        bg: 'bg-slate-50',
+        cardBg: 'bg-white',
+        text: 'text-slate-800',
+        textMuted: 'text-slate-500',
+        border: 'border-slate-200',
+        headerBg: 'bg-white',
+        inputBg: 'bg-white',
+        hover: 'hover:bg-slate-50'
+    };
     const { platos, menuPrice, refreshData, updateLocalPlato, reorderPlatos } = useData();
     const [modalOpen, setModalOpen] = useState(false);
     const [editingPlato, setEditingPlato] = useState<Plato | null>(null);
@@ -97,7 +119,11 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
             if (mode === 'menu') {
                 return p.Rol_Menu === 'PRIMERO' || p.Rol_Menu === 'SEGUNDO' || p.Rol_Menu === 'POSTRE';
             }
-            return p.Categoria.includes('CARTA');
+            if (mode === 'carta' || mode === 'raciones') {
+                return p.Categoria.includes('CARTA');
+            }
+            // If it's a specific category view for Kanala
+            return p.Categoria.includes('CARTA') && p.Tipo === mode;
         });
         filtered.forEach(p => {
             const k = mode === 'menu' ? (p.Rol_Menu && p.Rol_Menu !== 'NO' ? p.Rol_Menu : (p.Tipo || 'OTROS')) : (p.Tipo || 'OTROS');
@@ -259,14 +285,14 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
                 </div>
             )}
 
-            <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between mb-4 bg-white p-3 rounded-lg shadow-md border border-slate-200 gap-3">
+            <div className={`sticky top-0 z-40 flex flex-wrap items-center justify-between mb-4 p-3 rounded-lg shadow-md border gap-3 ${tc.headerBg} ${tc.border}`}>
                 <div className="flex items-center gap-3">
                     <button onClick={() => setView('home')} className="flex items-center gap-2 group text-left transition-colors">
                         <div className="p-2 bg-slate-100 rounded-full group-hover:bg-slate-200 text-slate-600 transition-colors">
                             <IconChevronLeft className="w-6 h-6" />
                         </div>
-                        <h2 className="text-xl sm:text-2xl font-bold font-lora text-slate-800 group-hover:text-slate-900 capitalize transition-colors">
-                            {mode === 'raciones' ? 'Gestión Raciones' : mode}
+                        <h2 className={`text-xl sm:text-2xl font-bold font-lora capitalize transition-colors ${isKanala ? 'text-white' : 'text-slate-800 group-hover:text-slate-900'}`}>
+                            {mode === 'raciones' ? 'Gestión Raciones' : mode === 'carta' ? 'Carta Principal' : (translations['ES']?.tipos as any)?.[mode] || mode}
                         </h2>
                     </button>
                 </div>
@@ -315,8 +341,8 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
                 {sortedKeys.map(key => {
                     const isExpanded = expandedCats[key] ?? defaultExpanded;
                     return (
-                        <div key={key} className="bg-white rounded-xl shadow-sm border border-slate-100 transition-all relative">
-                            <div className="sticky top-[64px] sm:top-[68px] z-20 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200 shadow-sm transition-colors hover:bg-slate-100/95 rounded-t-xl">
+                        <div key={key} className={`rounded-xl shadow-sm border transition-all relative ${tc.cardBg} ${isKanala ? "border-white/10" : "border-slate-100"}`}>
+                            <div className={`sticky top-[64px] sm:top-[68px] z-20 backdrop-blur-sm border-b shadow-sm transition-colors rounded-t-xl ${isKanala ? "bg-neutral-800/95 border-white/10 hover:bg-neutral-700/95" : "bg-slate-50/95 border-slate-200 hover:bg-slate-100/95"}`}>
                                 <button 
                                     onClick={() => toggleCat(key)}
                                     className="w-full flex items-center px-4 py-3 gap-2 group relative"
@@ -368,7 +394,7 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
                                         return (
                                             <div 
                                                 key={p.ID_Plato} 
-                                                className={`flex items-center px-4 py-2.5 hover:bg-slate-50/50 transition-colors gap-2 group ${draggedItem?.ID_Plato === p.ID_Plato ? 'opacity-50 bg-blue-50' : ''} ${isRestricted ? 'opacity-50 grayscale' : ''}`}
+                                                className={`flex items-center px-4 py-2.5 transition-colors gap-2 group ${isKanala ? "hover:bg-white/5" : "hover:bg-slate-50/50"} ${draggedItem?.ID_Plato === p.ID_Plato ? 'opacity-50 bg-blue-50' : ''} ${isRestricted ? 'opacity-50 grayscale' : ''}`}
                                                 draggable
                                                 onDragStart={(e) => handleDragStart(e, p)}
                                                 onDragOver={handleDragOver}
@@ -396,7 +422,7 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
                                                         <select 
                                                             value={p.Rol_Menu || "NO"} 
                                                             onChange={(e) => handleRolChange(p.ID_Plato, e.target.value)} 
-                                                            className={`text-xs font-bold uppercase rounded-md py-1.5 px-2 border border-slate-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 cursor-pointer transition-all appearance-none text-center w-full max-w-[160px] truncate ${p.Rol_Menu ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm' : 'bg-white text-slate-600 hover:text-slate-800 hover:bg-slate-50 shadow-sm'}`}
+                                                            className={`text-xs font-bold uppercase rounded-md py-1.5 px-2 border focus:border-blue-400 focus:ring-1 focus:ring-blue-400 cursor-pointer transition-all appearance-none text-center w-full max-w-[160px] truncate shadow-sm ${p.Rol_Menu ? 'bg-blue-50 text-blue-700 border-blue-200' : (isKanala ? 'bg-neutral-900 text-white border-white/20 hover:border-white/40' : 'bg-white text-slate-600 border-slate-300 hover:text-slate-800 hover:bg-slate-50')}`}
                                                         >
                                                             <option value="NO">{(t.tipos as any)[p.Tipo]?.toUpperCase() || p.Tipo}</option>
                                                             <option value="PRIMERO">PRIMER PLATO</option>
@@ -407,7 +433,7 @@ const GestionCategoria: React.FC<{ mode: 'menu' | 'carta' | 'raciones'; setView:
                                                 )}
                                                 <div className={`flex items-center gap-3 flex-shrink-0 justify-end`}>
                                                     {mode !== 'menu' && <EditablePrice price={p.Precio} id={p.ID_Plato} onUpdate={refreshData} />}
-                                                    <button onClick={() => openEditModal(p)} className="p-1.5 text-slate-700 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"><IconEdit width={18} height={18}/></button>
+                                                    <button onClick={() => openEditModal(p)} className={`p-1.5 rounded-full transition-colors ${isKanala ? "text-neutral-400 hover:text-white hover:bg-white/10" : "text-slate-700 hover:text-blue-600 hover:bg-blue-50"}`}><IconEdit width={18} height={18}/></button>
                                                     {mode === 'raciones' ? (
                                                         <div className="flex items-center gap-2">
                                                             <span className={`text-[9px] font-black uppercase tracking-tighter ${p.Es_Racion ? 'text-emerald-600' : 'text-slate-300'}`}>Ración</span>
