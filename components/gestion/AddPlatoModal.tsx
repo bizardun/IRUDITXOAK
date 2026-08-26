@@ -33,6 +33,8 @@ const ALLERGEN_LIST: { id: Alergeno; label: string }[] = [
 ];
 
 export default function AddPlatoModal({ isOpen, onClose, mode, refreshData, platoToEdit }: AddPlatoModalProps) {
+    const { config } = useConfig();
+    const isKanala = config.name.toLowerCase().includes('kanala');
     const initialData = { ES_Nombre: '', Precio: '', Tipo: ['ENTRANTE', 'ENSALADA', 'ARROZ', 'MARISCO', 'PESCADO', 'CARNE', 'POSTRE'].includes(mode) ? mode : 'ENTRANTE' };
     const [data, setData] = useState<any>(initialData);
     const [translationsData, setTranslationsData] = useState<Record<string, string>>({});
@@ -116,37 +118,37 @@ export default function AddPlatoModal({ isOpen, onClose, mode, refreshData, plat
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
             <form onSubmit={handleSubmit} className={`rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in-up border my-8 ${isKanala ? "bg-neutral-900 border-white/20" : "bg-white border-slate-200"}`}>
-                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                    <h3 className="text-xl font-bold font-lora text-slate-800">{isEditing ? 'Editar Plato' : 'Añadir Plato'}</h3>
-                    <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600"><IconX/></button>
+                <div className={`px-6 py-4 border-b flex justify-between items-center ${isKanala ? 'bg-neutral-900 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
+                    <h3 className={`text-xl font-bold font-lora ${isKanala ? 'text-white' : 'text-slate-800'}`}>{isEditing ? 'Editar Plato' : 'Añadir Plato'}</h3>
+                    <button type="button" onClick={onClose} className={`transition-colors ${isKanala ? 'text-neutral-500 hover:text-white' : 'text-slate-400 hover:text-slate-600'}`}><IconX/></button>
                 </div>
                 
                 <div className="p-6 overflow-y-auto max-h-[70vh] space-y-6">
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Nombre (Español)</label>
-                        <input required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 font-bold text-lg outline-none focus:ring-2 focus:ring-blue-500" value={data.ES_Nombre} onChange={e => setData({...data, ES_Nombre: e.target.value})} />
+                        <label className={`block text-xs font-bold mb-1.5 uppercase tracking-wide ${isKanala ? 'text-neutral-400' : 'text-slate-700'}`}>Nombre (Español)</label>
+                        <input required className={`w-full border rounded-lg p-3 font-bold text-lg outline-none focus:ring-2 focus:ring-blue-500 ${isKanala ? 'bg-neutral-800 border-white/20 text-white' : 'bg-slate-50 border-slate-300'}`} value={data.ES_Nombre} onChange={e => setData({...data, ES_Nombre: e.target.value})} />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Descripción / Ingredientes (Opcional)</label>
-                        <textarea className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Acompañado de patatas y salsa..." rows={2} value={data.Descripcion || ''} onChange={e => setData({...data, Descripcion: e.target.value})} />
+                        <label className={`block text-xs font-bold mb-1.5 uppercase tracking-wide ${isKanala ? 'text-neutral-400' : 'text-slate-700'}`}>Descripción / Ingredientes (Opcional)</label>
+                        <textarea className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${isKanala ? 'bg-neutral-800 border-white/20 text-white' : 'bg-slate-50 border-slate-300'}`} placeholder="Acompañado de patatas y salsa..." rows={2} value={data.Descripcion || ''} onChange={e => setData({...data, Descripcion: e.target.value})} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Tipo</label>
-                            <select className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm font-semibold outline-none" value={data.Tipo} onChange={e => setData({...data, Tipo: e.target.value as any})}>
+                            <label className={`block text-xs font-bold mb-1.5 uppercase tracking-wide ${isKanala ? 'text-neutral-400' : 'text-slate-700'}`}>Tipo</label>
+                            <select className={`w-full border rounded-lg p-3 text-sm font-semibold outline-none ${isKanala ? 'bg-neutral-800 border-white/20 text-white' : 'bg-slate-50 border-slate-300'}`} value={data.Tipo} onChange={e => setData({...data, Tipo: e.target.value as any})}>
                                 {Object.keys(translations.ES.tipos).map(k => <option key={k} value={k}>{k}</option>)}
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Precio (€)</label>
-                            <input required type="number" step="0.1" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 font-bold outline-none text-right" value={data.Precio} onChange={e => setData({...data, Precio: e.target.value})} />
+                            <label className={`block text-xs font-bold mb-1.5 uppercase tracking-wide ${isKanala ? 'text-neutral-400' : 'text-slate-700'}`}>Precio (€)</label>
+                            <input required type="number" step="0.1" className={`w-full border rounded-lg p-3 font-bold outline-none text-right ${isKanala ? 'bg-neutral-800 border-white/20 text-white' : 'bg-slate-50 border-slate-300'}`} value={data.Precio} onChange={e => setData({...data, Precio: e.target.value})} />
                         </div>
                     </div>
 
-                    <div className="space-y-4 pt-4 border-t border-slate-100">
+                    <div className={`space-y-4 pt-4 border-t ${isKanala ? 'border-white/10' : 'border-slate-100'}`}>
                         <div className="flex justify-between items-center">
-                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wide">Traducciones e IA</h4>
+                            <h4 className={`text-sm font-bold uppercase tracking-wide ${isKanala ? 'text-neutral-500' : 'text-slate-400'}`}>Traducciones e IA</h4>
                             <button type="button" onClick={handleAnalyzeDish} disabled={loading || !data.ES_Nombre} className="text-xs bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all">
                                 {loading ? 'Analizando...' : '✨ Traducir con Elhuyar'}
                             </button>

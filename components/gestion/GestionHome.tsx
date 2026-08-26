@@ -17,13 +17,7 @@ export default function GestionHome({ setView }: { setView: (v: any) => void }) 
     const { config } = useConfig();
     const isKanala = config.name.toLowerCase().includes('kanala');
     const cards = isKanala ? [
-        { id: 'ENTRANTE', label: 'Entrantes', icon: IconBook, color: 'text-white border-white/20 bg-white/5 hover:bg-white/10' },
-        { id: 'ENSALADA', label: 'Ensaladas', icon: IconBook, color: 'text-white border-white/20 bg-white/5 hover:bg-white/10' },
-        { id: 'ARROZ', label: 'Arroces', icon: IconBook, color: 'text-white border-white/20 bg-white/5 hover:bg-white/10' },
-        { id: 'MARISCO', label: 'Mariscos', icon: IconBook, color: 'text-white border-white/20 bg-white/5 hover:bg-white/10' },
-        { id: 'PESCADO', label: 'Pescados', icon: IconBook, color: 'text-white border-white/20 bg-white/5 hover:bg-white/10' },
-        { id: 'CARNE', label: 'Carnes', icon: IconBook, color: 'text-white border-white/20 bg-white/5 hover:bg-white/10' },
-        { id: 'POSTRE', label: 'Postres', icon: IconBook, color: 'text-white border-white/20 bg-white/5 hover:bg-white/10' },
+        { id: 'ALL', label: 'Gestionar Carta', icon: IconBook, color: 'text-white border-white/20 bg-white/5 hover:bg-white/10' },
         { id: 'qr', label: 'Descargar QR / Cartel', icon: IconQR, color: 'text-white/80 border-white/20 bg-white/5 hover:bg-white/10' },
     ] : [
         { id: 'menu', label: 'Menú del Día', icon: IconMenu, color: 'text-blue-600 border-blue-200 bg-blue-50' },

@@ -9,8 +9,8 @@ import { useConfig } from '../../context/ConfigContext';
 
 const GestionApp: React.FC = () => {
     
-    const [view, setView] = useState<string>('home');
     const { config } = useConfig();
+    const [view, setView] = useState<string>(config?.name?.toLowerCase().includes('kanala') ? 'ALL' : 'home');
 
         
 

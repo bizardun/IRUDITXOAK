@@ -158,7 +158,7 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
                                 Escanea el código
                             </h2>
                             <p className="text-slate-600 text-lg">
-                                Para ver nuestros platos, precios y menú del día actualizado.
+                                Para ver nuestra oferta gastronómica actualizada a día de hoy.
                             </p>
                         </div>
                     </div>

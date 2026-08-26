@@ -4,6 +4,14 @@ import { useData } from '../../context/DataContext';
 import { useConfig } from '../../context/ConfigContext';
 import { translations } from '../../constants';
 import { IconChevronLeft, IconPlus, IconEdit, IconSort, IconArrowDown, IconAllergy, IconX } from '../icons';
+const IconQR = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="7"></rect>
+    <rect x="14" y="3" width="7" height="7"></rect>
+    <rect x="14" y="14" width="7" height="7"></rect>
+    <path d="M3 14h7v7H3z"></path>
+  </svg>
+);
 import { Switch } from '../ui/Switch';
 import { EditablePrice } from '../ui/EditablePrice';
 import api from '../../services/api';
@@ -119,7 +127,7 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
             if (mode === 'menu') {
                 return p.Rol_Menu === 'PRIMERO' || p.Rol_Menu === 'SEGUNDO' || p.Rol_Menu === 'POSTRE';
             }
-            if (mode === 'carta' || mode === 'raciones') {
+            if (mode === 'carta' || mode === 'raciones' || mode === 'ALL') {
                 return p.Categoria.includes('CARTA');
             }
             // If it's a specific category view for Kanala
@@ -234,19 +242,19 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
         
         return (
             <div className="sticky top-[68px] z-30 -mx-2 sm:-mx-4 mb-4 animate-fade-in">
-                <div className="bg-white/95 backdrop-blur-md border-t border-slate-200 border-b-4 border-b-slate-300 shadow-md py-2 px-4 sm:px-6">
+                <div className={`backdrop-blur-md border-t border-b-4 shadow-md py-2 px-4 sm:px-6 ${isKanala ? 'bg-neutral-900/95 border-white/10 border-b-neutral-800' : 'bg-white/95 border-slate-200 border-b-slate-300'}`}>
                     <div className="max-w-5xl mx-auto flex flex-col gap-1">
                         <div className="flex justify-between items-center px-1 mb-1">
-                            <p className="text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{t.infoAlergenos}</p>
+                            <p className={`text-[9px] sm:text-xs font-black uppercase tracking-[0.2em] ${isKanala ? 'text-neutral-400' : 'text-slate-400'}`}>{t.infoAlergenos}</p>
                             <div className="flex items-center gap-2">
                                 {selectedAllergens.length > 0 && (
-                                    <button onClick={() => setSelectedAllergens([])} className="text-[9px] bg-slate-800 text-white px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm hover:bg-slate-700 transition-colors">
+                                    <button onClick={() => setSelectedAllergens([])} className={`text-[9px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm transition-colors ${isKanala ? 'bg-white text-black hover:bg-neutral-200' : 'bg-slate-800 text-white hover:bg-slate-700'}`}>
                                         <IconX width={8} height={8}/> LIMPIAR
                                     </button>
                                 )}
                                 <button 
                                     onClick={() => setShowAllergens(false)} 
-                                    className="text-slate-400 hover:text-slate-700 transition-colors p-1 rounded-full hover:bg-slate-100"
+                                    className={`transition-colors p-1 rounded-full ${isKanala ? 'text-neutral-400 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'}`}
                                     title={t.ocultarAlergenos}
                                 >
                                     <IconX width={14} height={14} />
@@ -260,10 +268,10 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                                     <button 
                                         key={key} 
                                         onClick={() => setSelectedAllergens(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])}
-                                        className={`flex items-center gap-1 transition-all duration-200 rounded-md px-1.5 py-0.5 border ${isSelected ? 'bg-white border-slate-800 shadow-sm ring-1 ring-slate-200 z-10' : 'bg-white/40 border-slate-100 hover:border-slate-300'}`}
+                                        className={`flex items-center gap-1 transition-all duration-200 rounded-md px-1.5 py-0.5 border ${isKanala ? (isSelected ? 'bg-neutral-700 border-white shadow-sm ring-1 ring-neutral-600 z-10' : 'bg-transparent border-white/20 hover:border-white/40') : (isSelected ? 'bg-white border-slate-800 shadow-sm ring-1 ring-slate-200 z-10' : 'bg-white/40 border-slate-100 hover:border-slate-300')}`}
                                     >
                                         <span className={`w-2 h-2 rounded-full flex-shrink-0 ${allergenColors[key] || 'bg-gray-400'}`}></span>
-                                        <span className={`text-[9px] font-bold uppercase whitespace-nowrap tracking-tight ${isSelected ? 'text-slate-900' : 'text-slate-500'}`}>{t.alergenos?.[key] || key}</span>
+                                        <span className={`text-[9px] font-bold uppercase whitespace-nowrap tracking-tight ${isSelected ? (isKanala ? 'text-white' : 'text-slate-900') : (isKanala ? 'text-neutral-400' : 'text-slate-500')}`}>{t.alergenos?.[key] || key}</span>
                                     </button>
                                 );
                             })}
@@ -287,14 +295,22 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
 
             <div className={`sticky top-0 z-40 flex flex-wrap items-center justify-between mb-4 p-3 rounded-lg shadow-md border gap-3 ${tc.headerBg} ${tc.border}`}>
                 <div className="flex items-center gap-3">
-                    <button onClick={() => setView('home')} className="flex items-center gap-2 group text-left transition-colors">
-                        <div className="p-2 bg-slate-100 rounded-full group-hover:bg-slate-200 text-slate-600 transition-colors">
-                            <IconChevronLeft className="w-6 h-6" />
+                    {!(isKanala && mode === 'ALL') ? (
+                        <button onClick={() => setView('home')} className="flex items-center gap-2 group text-left transition-colors">
+                            <div className={`p-2 rounded-full transition-colors ${isKanala ? 'bg-neutral-800 group-hover:bg-neutral-700 text-neutral-300' : 'bg-slate-100 group-hover:bg-slate-200 text-slate-600'}`}>
+                                <IconChevronLeft className="w-6 h-6" />
+                            </div>
+                            <h2 className={`text-xl sm:text-2xl font-bold font-lora capitalize transition-colors ${isKanala ? 'text-white' : 'text-slate-800 group-hover:text-slate-900'}`}>
+                                {mode === 'raciones' ? 'Gestión Raciones' : mode === 'carta' ? 'Carta Principal' : (translations['ES']?.tipos as any)?.[mode] || mode}
+                            </h2>
+                        </button>
+                    ) : (
+                        <div className="flex items-center gap-2 pl-2">
+                            <h2 className={`text-xl sm:text-2xl font-bold font-lora capitalize ${tc.text}`}>
+                                Panel de Gestión
+                            </h2>
                         </div>
-                        <h2 className={`text-xl sm:text-2xl font-bold font-lora capitalize transition-colors ${isKanala ? 'text-white' : 'text-slate-800 group-hover:text-slate-900'}`}>
-                            {mode === 'raciones' ? 'Gestión Raciones' : mode === 'carta' ? 'Carta Principal' : (translations['ES']?.tipos as any)?.[mode] || mode}
-                        </h2>
-                    </button>
+                    )}
                 </div>
 
                 {mode === 'menu' && (
@@ -317,18 +333,24 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                     >
                         {isReanalyzing ? `Analizando... ${reanalyzeProgress}%` : confirmReanalyze ? '¿Confirmar re-análisis?' : 'Re-analizar Alérgenos'}
                     </button>
-                    <button onClick={() => setShowAllergens(!showAllergens)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-sm ${showAllergens ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+                    <button onClick={() => setShowAllergens(!showAllergens)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-sm ${showAllergens ? (isKanala ? 'bg-white text-black border-white' : 'bg-slate-800 text-white border-slate-800') : (isKanala ? 'bg-transparent text-white border-white/20 hover:bg-white/5' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50')}`}>
                         <IconAllergy className="w-4 h-4" /> {showAllergens ? t.ocultarAlergenos : t.mostrarAlergenos}
                     </button>
                     <button 
                         onClick={() => toggleAll(allCollapsed)} 
-                        className="text-[10px] font-black uppercase text-slate-400 border border-slate-200 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
+                        className={`text-[10px] font-black uppercase border px-2 py-1.5 rounded-lg transition-colors ${isKanala ? 'text-neutral-400 border-white/20 hover:bg-white/5' : 'text-slate-400 border-slate-200 hover:bg-slate-50'}`}
                     >
                         {allCollapsed ? 'Expandir todo' : 'Colapsar todo'}
                     </button>
                     <button onClick={handleManualSave} disabled={saving} className="bg-amber-500 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow hover:bg-amber-600 transition-colors flex items-center gap-2">
                          {saving ? '...' : 'Guardar'}
                     </button>
+                    
+                    {isKanala && mode === 'ALL' && (
+                        <button onClick={() => setView('qr')} className="flex items-center gap-1 bg-neutral-800 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow hover:bg-neutral-700 transition-colors border border-white/20">
+                            <IconQR /> QR
+                        </button>
+                    )}
                     <button onClick={openAddModal} className="flex items-center gap-1 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow hover:bg-emerald-700 transition-colors">
                         <IconPlus /> Añadir
                     </button>
@@ -349,15 +371,15 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                                 >
                                     <div className="p-1.5 w-[28px] flex-shrink-0"></div>
                                     <div className={`${mode === 'carta' ? 'w-[35%]' : 'flex-grow'} min-w-0 flex items-center gap-2 text-left`}>
-                                        <span className={`w-2 h-2 rounded-full transition-colors ${isExpanded ? 'bg-amber-400 shadow-sm' : 'bg-slate-300'}`}></span>
-                                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 truncate">
+                                        <span className={`w-2 h-2 rounded-full transition-colors ${isExpanded ? 'bg-amber-400 shadow-sm' : (isKanala ? 'bg-neutral-600' : 'bg-slate-300')}`}></span>
+                                        <h3 className={`text-xs font-bold uppercase tracking-wider truncate ${tc.text}`}>
                                             {(t.tipos as any)[key] || (key === 'PRIMERO' ? t.primerosPlatos : key === 'SEGUNDO' ? t.segundosPlatos : key)}
                                             <span className="text-[10px] opacity-40 ml-1">({groupedPlatos[key].length})</span>
                                         </h3>
                                     </div>
                                     {mode === 'carta' && (
                                         <div className="flex-1 flex justify-center px-1">
-                                            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Menú día</span>
+                                            <span className={`text-[11px] font-semibold uppercase tracking-wider ${tc.textMuted}`}>Menú día</span>
                                         </div>
                                     )}
                                     <div className="flex items-center gap-3 flex-shrink-0 justify-end opacity-0 pointer-events-none">
@@ -366,13 +388,13 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                                         {mode === 'raciones' ? <div className="w-[70px]"></div> : <div className="w-[44px]"></div>}
                                     </div>
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                        <IconArrowDown className={`w-4 h-4 text-slate-700 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                        <IconArrowDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''} ${tc.text}`} />
                                     </div>
                                 </button>
                             </div>
                             
                             <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0 invisible overflow-hidden'}`}>
-                                <div className="divide-y divide-slate-50">
+                                <div className={`divide-y ${isKanala ? 'divide-white/5' : 'divide-slate-50'}`}>
                                     {groupedPlatos[key].map((p) => {
                                         const allergensToDisplay = (() => {
                                             if (!p.Alergenos || !Array.isArray(p.Alergenos)) return [];
@@ -400,11 +422,11 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                                                 onDragOver={handleDragOver}
                                                 onDrop={(e) => handleDrop(e, p)}
                                             >
-                                                <div className="cursor-grab active:cursor-grabbing p-1.5 text-slate-700 hover:text-blue-600 rounded transition-colors">
+                                                <div className={`cursor-grab active:cursor-grabbing p-1.5 rounded transition-colors ${isKanala ? 'text-neutral-400 hover:text-white' : 'text-slate-700 hover:text-blue-600'}`}>
                                                     <IconSort width={16} height={16} />
                                                 </div>
                                                 <div className={`${mode === 'carta' ? 'w-[35%]' : 'flex-grow'} min-w-0`}>
-                                                    <p className={`text-sm font-medium leading-snug truncate ${isRestricted ? 'text-slate-500 line-through decoration-slate-400' : 'text-slate-800'}`}>{p.ES_Nombre}</p>
+                                                    <p className={`text-sm font-medium leading-snug truncate ${isRestricted ? (isKanala ? 'text-neutral-500 line-through decoration-neutral-600' : 'text-slate-500 line-through decoration-slate-400') : tc.text}`}>{p.ES_Nombre}</p>
                                                     {(showAllergens || isRestricted) && hasAllergens && (
                                                         <div className="flex flex-row items-center gap-1 mt-1">
                                                             {allergensToDisplay.map((a: any) => (
