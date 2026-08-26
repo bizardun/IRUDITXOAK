@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useData } from '../../context/DataContext';
 import { useConfig } from '../../context/ConfigContext';
 import { translations } from '../../constants';
-import { IconChevronLeft, IconPlus, IconEdit, IconSort, IconArrowDown, IconAllergy, IconX } from '../icons';
+import { IconChevronLeft, IconPlus, IconEdit, IconSort, IconArrowUp, IconArrowDown, IconAllergy, IconX } from '../icons';
 const IconQR = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="3" width="7" height="7"></rect>
@@ -226,6 +226,53 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
         setDraggedItem(null);
     };
 
+    const movePlatoUp = async (e: React.MouseEvent, item: Plato) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Find items in the same category to determine relative order
+        const catPlatos = platos.filter(p => p.Tipo === item.Tipo);
+        const catIndex = catPlatos.findIndex(p => p.ID_Plato === item.ID_Plato);
+        
+        if (catIndex <= 0) return; // Already at the top of its category
+        
+        const prevItem = catPlatos[catIndex - 1];
+        
+        const globalIndex = platos.findIndex(p => p.ID_Plato === item.ID_Plato);
+        const globalPrevIndex = platos.findIndex(p => p.ID_Plato === prevItem.ID_Plato);
+        
+        const newPlatos = [...platos];
+        const temp = newPlatos[globalIndex];
+        newPlatos[globalIndex] = newPlatos[globalPrevIndex];
+        newPlatos[globalPrevIndex] = temp;
+        
+        await reorderPlatos(newPlatos);
+    };
+
+    const movePlatoDown = async (e: React.MouseEvent, item: Plato) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const catPlatos = platos.filter(p => p.Tipo === item.Tipo);
+        const catIndex = catPlatos.findIndex(p => p.ID_Plato === item.ID_Plato);
+        
+        if (catIndex === -1 || catIndex === catPlatos.length - 1) return; // Already at the bottom
+        
+        const nextItem = catPlatos[catIndex + 1];
+        
+        const globalIndex = platos.findIndex(p => p.ID_Plato === item.ID_Plato);
+        const globalNextIndex = platos.findIndex(p => p.ID_Plato === nextItem.ID_Plato);
+        
+        const newPlatos = [...platos];
+        const temp = newPlatos[globalIndex];
+        newPlatos[globalIndex] = newPlatos[globalNextIndex];
+        newPlatos[globalNextIndex] = temp;
+        
+        await reorderPlatos(newPlatos);
+    };
+
+
+
     const openEditModal = (plato: Plato) => {
         setEditingPlato(plato);
         setModalOpen(true);
@@ -417,13 +464,15 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                                             <div 
                                                 key={p.ID_Plato} 
                                                 className={`flex items-center px-4 py-2.5 transition-colors gap-2 group ${isKanala ? "hover:bg-white/5" : "hover:bg-slate-50/50"} ${draggedItem?.ID_Plato === p.ID_Plato ? 'opacity-50 bg-blue-50' : ''} ${isRestricted ? 'opacity-50 grayscale' : ''}`}
-                                                draggable
-                                                onDragStart={(e) => handleDragStart(e, p)}
-                                                onDragOver={handleDragOver}
-                                                onDrop={(e) => handleDrop(e, p)}
+
                                             >
-                                                <div className={`cursor-grab active:cursor-grabbing p-1.5 rounded transition-colors ${isKanala ? 'text-neutral-400 hover:text-white' : 'text-slate-700 hover:text-blue-600'}`}>
-                                                    <IconSort width={16} height={16} />
+                                                <div className="flex flex-col items-center justify-center -ml-2 mr-1">
+                                                    <button onClick={(e) => movePlatoUp(e, p)} className={`p-1 rounded transition-colors ${isKanala ? 'text-neutral-500 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'}`}>
+                                                        <IconArrowUp width={18} height={18} />
+                                                    </button>
+                                                    <button onClick={(e) => movePlatoDown(e, p)} className={`p-1 rounded transition-colors ${isKanala ? 'text-neutral-500 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'}`}>
+                                                        <IconArrowDown width={18} height={18} />
+                                                    </button>
                                                 </div>
                                                 <div className={`${mode === 'carta' ? 'w-[35%]' : 'flex-grow'} min-w-0`}>
                                                     <p className={`text-sm font-medium leading-snug truncate ${isRestricted ? (isKanala ? 'text-neutral-500 line-through decoration-neutral-600' : 'text-slate-500 line-through decoration-slate-400') : tc.text}`}>{p.ES_Nombre}</p>

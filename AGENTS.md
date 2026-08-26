@@ -11,3 +11,6 @@ A continuación, se detallan las reglas y preferencias de diseño establecidas p
 
 ## Código QR y Material Promocional
 1. **Frase del cartel QR:** Al generar cartelería para que los clientes escaneen y accedan al menú, la frase descriptiva predeterminada debajo del código QR debe ser SIEMPRE: *"Para ver nuestra oferta gastronómica actualizada a día de hoy."* (Universal para todos los restaurantes).
+
+## Interfaz de Gestión y Administración
+1. **Reordenamiento de Elementos (Prohibido Drag & Drop):** Para permitir al usuario reordenar listas de elementos (como la posición de los platos en una carta), **SIEMPRE** se deben utilizar botones explícitos con flechas (Subir/Bajar). Queda **estrictamente prohibido** utilizar sistemas de arrastrar y soltar (drag & drop, `draggable`, `onDragStart`), ya que generan conflictos de scroll en dispositivos táctiles móviles. El reordenamiento debe ser mediante toques directos (clicks) que actualicen la posición de la base de datos de forma predecible.
