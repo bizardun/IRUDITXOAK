@@ -43,6 +43,7 @@ export interface RestaurantConfig {
     initialPlatos: Plato[];
     theme?: ThemeConfig;
     adminPassword?: string;
+    officialWebsite?: string;
 }
 
 export interface Language {
@@ -78,6 +79,8 @@ export interface TranslationDictionary {
     infoAlergenos: string;
     mostrarAlergenos: string;
     ocultarAlergenos: string;
+    ivaYDatos: string;
+    visitarWeb: string;
     tipos: { [key: string]: string };
     alergenos: { [key: string]: string };
     gestion?: GestionTranslations;

@@ -14,3 +14,7 @@ A continuación, se detallan las reglas y preferencias de diseño establecidas p
 
 ## Interfaz de Gestión y Administración
 1. **Reordenamiento de Elementos (Prohibido Drag & Drop):** Para permitir al usuario reordenar listas de elementos (como la posición de los platos en una carta), **SIEMPRE** se deben utilizar botones explícitos con flechas (Subir/Bajar). Queda **estrictamente prohibido** utilizar sistemas de arrastrar y soltar (drag & drop, `draggable`, `onDragStart`), ya que generan conflictos de scroll en dispositivos táctiles móviles. El reordenamiento debe ser mediante toques directos (clicks) que actualicen la posición de la base de datos de forma predecible.
+
+## Enlace a la Web Oficial (Transversal)
+1. **Configuración de Web Oficial:** En el panel maestro de gestión de aplicaciones (Factory Dashboard), junto a los botones de "Contraseña" y "QR", **SIEMPRE** se debe mantener el botón/modal para configurar la "Web Oficial" de cada restaurante.
+2. **Visualización en Cliente:** En la aplicación cliente (la que ve el usuario final), **SIEMPRE** se debe mostrar un enlace a la web oficial en el pie de página (footer) si esta ha sido configurada en el panel maestro, respetando la estética del tema actual.

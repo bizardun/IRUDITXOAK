@@ -23,6 +23,8 @@ export const translations: Translations = {
         infoAlergenos: "Información de Alérgenos",
         mostrarAlergenos: "Mostrar Alérgenos",
         ocultarAlergenos: "Ocultar Alérgenos",
+        ivaYDatos: "I.V.A. INCLUIDO • DATOS EN TIEMPO REAL",
+        visitarWeb: "VISITAR WEB OFICIAL",
         tipos: { ENTRANTE: "Entrantes", ENSALADA: "Ensaladas", ARROZ: "Arroces", MARISCO: "Mariscos", PESCADO: "Pescados", CARNE: "Carnes", POSTRE: "Postres" },
         alergenos: {
             GLUTEN: "Gluten", CRUSTACEOS: "Crustáceos", HUEVOS: "Huevos", PESCADO: "Pescado", 
@@ -57,6 +59,8 @@ export const translations: Translations = {
         infoAlergenos: "Alergenoen Informazioa",
         mostrarAlergenos: "Alergenoak Erakutsi",
         ocultarAlergenos: "Alergenoak Ezkutatu",
+        ivaYDatos: "BEZ BARNE • DATUAK DENBORA ERREALEAN",
+        visitarWeb: "WEB OFIZIALA BISITATU",
         tipos: { ENTRANTE: "Hasierakoak", ENSALADA: "Entsaladak", ARROZ: "Arrozak", MARISCO: "Itsaskiak", PESCADO: "Arrainak", CARNE: "Haragiak", POSTRE: "Postreak" },
         alergenos: {
             GLUTEN: "Glutena", CRUSTACEOS: "Krustazeoak", HUEVOS: "Arrautzak", PESCADO: "Arraina", 
@@ -76,6 +80,8 @@ export const translations: Translations = {
         infoAlergenos: "Allergen Information",
         mostrarAlergenos: "Show Allergens",
         ocultarAlergenos: "Hide Allergens",
+        ivaYDatos: "V.A.T. INCLUDED • REAL-TIME DATA",
+        visitarWeb: "VISIT OFFICIAL WEBSITE",
         tipos: { ENTRANTE: "Starters", ENSALADA: "Salads", ARROZ: "Rice", MARISCO: "Seafood", PESCADO: "Fish", CARNE: "Meats", POSTRE: "Desserts" },
         alergenos: {
             GLUTEN: "Gluten", CRUSTACEOS: "Crustaceans", HUEVOS: "Eggs", PESCADO: "Fish", 
@@ -95,6 +101,8 @@ export const translations: Translations = {
         infoAlergenos: "Information Allergènes",
         mostrarAlergenos: "Afficher Allergènes",
         ocultarAlergenos: "Masquer Allergènes",
+        ivaYDatos: "T.V.A. INCLUSE • DONNÉES EN TEMPS RÉEL",
+        visitarWeb: "VISITER LE SITE WEB OFFICIEL",
         tipos: { ENTRANTE: "Entrées", ENSALADA: "Salades", ARROZ: "Riz", MARISCO: "Fruits de mer", PESCADO: "Poissons", CARNE: "Viandes", POSTRE: "Desserts" },
         alergenos: {
             GLUTEN: "Gluten", CRUSTACEOS: "Crustacés", HUEVOS: "Œufs", PESCADO: "Poisson", 
@@ -114,6 +122,8 @@ export const translations: Translations = {
         infoAlergenos: "Allergieinformationen",
         mostrarAlergenos: "Allergene anzeigen",
         ocultarAlergenos: "Allergene ausblenden",
+        ivaYDatos: "MWST. INKLUSIVE • ECHTZEITDATEN",
+        visitarWeb: "OFFIZIELLE WEBSITE BESUCHEN",
         tipos: { ENTRANTE: "Vorspeisen", ENSALADA: "Salate", ARROZ: "Reis", MARISCO: "Meeresfrüchte", PESCADO: "Fisch", CARNE: "Fleisch", POSTRE: "Desserts" },
         alergenos: {
             GLUTEN: "Gluten", CRUSTACEOS: "Krebstiere", HUEVOS: "Eier", PESCADO: "Fisch", 
@@ -133,6 +143,8 @@ export const translations: Translations = {
         infoAlergenos: "Informazioni Allergeni",
         mostrarAlergenos: "Mostra Allergeni",
         ocultarAlergenos: "Nascondi Allergeni",
+        ivaYDatos: "I.V.A. INCLUSA • DATI IN TEMPO REALE",
+        visitarWeb: "VISITA IL SITO UFFICIALE",
         tipos: { ENTRANTE: "Antipasti", ENSALADA: "Insalate", ARROZ: "Riso", MARISCO: "Frutti di mare", PESCADO: "Pesce", CARNE: "Carne", POSTRE: "Dolci" },
         alergenos: {
             GLUTEN: "Glutine", CRUSTACEOS: "Crostacei", HUEVOS: "Uova", PESCADO: "Pesce", 

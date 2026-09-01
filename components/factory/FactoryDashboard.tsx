@@ -48,6 +48,8 @@ export default function FactoryDashboard() {
 
     // Estado para Vista Previa
     const [passwordApp, setPasswordApp] = useState<RestaurantConfig | null>(null);
+    const [websiteApp, setWebsiteApp] = useState<RestaurantConfig | null>(null);
+    const [newWebsite, setNewWebsite] = useState('');
     const [newAdminPassword, setNewAdminPassword] = useState('');
 
     // Estado para Descargar ZIP
@@ -134,6 +136,20 @@ export default function FactoryDashboard() {
         setPasswordApp(null);
         // Note: The useConfig context should ideally provide a way to update, but we just trigger a save via API directly and the context might not auto-refresh. For simplicity, we just reload window or rely on the user to understand it's saved.
         alert('Contraseña guardada correctamente.');
+    };
+
+    const handleWebsiteClick = (e: React.MouseEvent, app: RestaurantConfig) => {
+        e.stopPropagation();
+        setWebsiteApp(app);
+        setNewWebsite(app.officialWebsite || '');
+    };
+
+    const saveWebsite = async () => {
+        if (!websiteApp) return;
+        const updatedApp = { ...websiteApp, officialWebsite: newWebsite };
+        await api.saveApp(updatedApp);
+        setWebsiteApp(null);
+        alert('Web oficial guardada correctamente.');
     };
 
     const closeShare = () => { setSharingApp(null); setCopiedClient(false); setCopiedAdmin(false); };
@@ -243,6 +259,34 @@ export default function FactoryDashboard() {
                 </div>
             )}
 
+            {/* Modal de Configurar Web */}
+            {websiteApp && (
+                <div className="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm">
+                        <h2 className="text-xl font-bold text-slate-800 mb-4">Configurar Web Oficial</h2>
+                        <p className="text-sm text-slate-600 mb-4">Establece la página web oficial para <strong>{websiteApp.name}</strong>.</p>
+                        
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Enlace (URL)</label>
+                                <input 
+                                    type="text" 
+                                    value={newWebsite}
+                                    onChange={(e) => setNewWebsite(e.target.value)}
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-slate-900 bg-white"
+                                    placeholder="Ej: https://www.kanala.es"
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className="flex justify-end gap-3">
+                            <button onClick={() => setWebsiteApp(null)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium">Cancelar</button>
+                            <button onClick={saveWebsite} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-bold shadow-sm">Guardar Web</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modal de Configurar Contraseña */}
             {passwordApp && (
                 <div className="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center p-4">
@@ -257,7 +301,7 @@ export default function FactoryDashboard() {
                                     type="text" 
                                     value={newAdminPassword}
                                     onChange={(e) => setNewAdminPassword(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-slate-900 bg-white"
                                     placeholder="Ej: 1234"
                                 />
                             </div>
@@ -335,9 +379,16 @@ export default function FactoryDashboard() {
                                             </button>
                                             <button 
                                                 onClick={(e) => handleShareClick(e, app)}
-                                                className="flex-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white py-1.5 rounded-lg text-xs font-bold transition-all border border-slate-600"
+                                                className="flex-1 flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white py-1.5 rounded-lg text-xs font-bold transition-all border border-slate-600"
                                             >
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h7v7H3z"/></svg> QR
+                                            </button>
+                                            <button 
+                                                onClick={(e) => handleWebsiteClick(e, app)}
+                                                className="flex-1 flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white py-1.5 rounded-lg text-xs font-bold transition-all border border-slate-600"
+                                                title="Configurar Web Oficial"
+                                            >
+                                                <svg width="14" height="14" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Web
                                             </button>
                                         </div>
                                     </div>
