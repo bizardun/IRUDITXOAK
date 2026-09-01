@@ -91,8 +91,17 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                 await Promise.all(chunk.map(async (plato) => {
                     try {
                         const analysis = await api.analyzeDish(plato.ES_Nombre);
+                        const updates: Partial<Plato> = {};
                         if (analysis.allergens) {
-                            await api.updatePlato(plato.ID_Plato, { Alergenos: analysis.allergens });
+                            updates.Alergenos = analysis.allergens;
+                        }
+                        if (analysis.translations) {
+                            Object.keys(analysis.translations).forEach(code => {
+                                (updates as any)[`${code}_Nombre`] = analysis.translations[code];
+                            });
+                        }
+                        if (Object.keys(updates).length > 0) {
+                            await api.updatePlato(plato.ID_Plato, updates);
                         }
                     } catch (err) {
                         console.error("Error analizando:", plato.ES_Nombre, err);
@@ -376,9 +385,9 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                         onClick={handleReanalyzeAllergens} 
                         disabled={isReanalyzing} 
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-sm ${confirmReanalyze ? 'bg-red-600 text-white border-red-600' : isReanalyzing ? 'bg-slate-200 text-slate-500 border-slate-300' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
-                        title="Re-analizar todos los platos con IA"
+                        title="Re-analizar y Traducir con IA"
                     >
-                        {isReanalyzing ? `Analizando... ${reanalyzeProgress}%` : confirmReanalyze ? '¿Confirmar re-análisis?' : 'Re-analizar Alérgenos'}
+                        {isReanalyzing ? `Analizando... ${reanalyzeProgress}%` : confirmReanalyze ? '¿Confirmar acción?' : 'Re-analizar / Traducir'}
                     </button>
                     <button onClick={() => setShowAllergens(!showAllergens)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-sm ${showAllergens ? (isKanala ? 'bg-white text-black border-white' : 'bg-slate-800 text-white border-slate-800') : (isKanala ? 'bg-transparent text-white border-white/20 hover:bg-white/5' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50')}`}>
                         <IconAllergy className="w-4 h-4" /> {showAllergens ? t.ocultarAlergenos : t.mostrarAlergenos}

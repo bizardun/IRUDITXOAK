@@ -18,3 +18,7 @@ A continuación, se detallan las reglas y preferencias de diseño establecidas p
 ## Enlace a la Web Oficial (Transversal)
 1. **Configuración de Web Oficial:** En el panel maestro de gestión de aplicaciones (Factory Dashboard), junto a los botones de "Contraseña" y "QR", **SIEMPRE** se debe mantener el botón/modal para configurar la "Web Oficial" de cada restaurante.
 2. **Visualización en Cliente:** En la aplicación cliente (la que ve el usuario final), **SIEMPRE** se debe mostrar un enlace a la web oficial en el pie de página (footer) si esta ha sido configurada en el panel maestro, respetando la estética del tema actual.
+
+## Traducciones de Platos (IA)
+1. **Respetar Traducciones Oficiales:** Al analizar o traducir platos mediante la IA, el sistema **SIEMPRE** debe verificar primero de forma dinámica la página web oficial del restaurante (configurada en la variable `officialWebsite`). Si la web oficial ya tiene una traducción para ese plato, la IA **DEBE PRESERVAR Y UTILIZAR ESA TRADUCCIÓN EXACTA** sin generar una nueva. Solo debe generar traducciones nuevas si el plato o el idioma no existen en la web oficial (buscando con `site:dominio.com`).
+2. **Uso de Elhuyar para Euskera:** Cuando haya que generar una traducción nueva al euskera (EU), la IA siempre debe usar Google Search para contrastarla con el Diccionario Elhuyar (https://www.euskadi.eus/diccionario-elhuyar/).

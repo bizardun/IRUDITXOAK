@@ -51,7 +51,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                          ? parsed.filter((a: any) => a.id !== bolinaConfig.id && !fbApps.some(fba => fba.id === a.id))
                         : [];
                     for (const a of others) {
-                        await api.saveApp(a);
+                        await api.saveApp(a, true);
                         apps.push(a);
                     }
                     localStorage.removeItem(APPS_STORAGE_KEY);
@@ -123,7 +123,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 initialPlatos: newPlatos
             };
 
-            await api.saveApp(newApp);
+            await api.saveApp(newApp, true);
             
             setAvailableApps(prev => [...prev, newApp]);
             

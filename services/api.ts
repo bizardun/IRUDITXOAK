@@ -57,13 +57,28 @@ export const analyzeDish = async (dishName: string): Promise<{ translations: Rec
         "SOJA", "CACAHUETES", "MOSTAZA", "SESAMO", "SULFITOS", "APIO", "ALTRAMUCES", "CALAMARES"
     ];
 
+    const currentConfig = getActiveConfig();
+    let websiteSearchRule = "";
+    if (currentConfig.officialWebsite) {
+        let domain = currentConfig.officialWebsite;
+        try {
+            domain = new URL(currentConfig.officialWebsite).hostname;
+        } catch(e) {}
+        websiteSearchRule = `2. You MUST use Google Search with 'site:${domain}' to find the official translations for the given dish name on the restaurant's website. If you find existing translations on the website, YOU MUST PRESERVE AND RETURN THOSE EXACT TRANSLATIONS. Only generate new translations if the dish cannot be found on their website.`;
+    } else {
+        websiteSearchRule = "2. (No official website configured for this restaurant, generate standard translations).";
+    }
+
     const systemPrompt = `
         You are an expert culinary AI and food safety inspector.
         Analyze the Spanish Dish Name provided.
         
+        CRITICAL TRANSLATION RULES:
         1. Translate the dish name to: EU, EN, FR, DE, IT.
-        2. For EU (Basque), you MUST use Google Search to cross-reference with https://www.euskadi.eus/diccionario-elhuyar/.
-        3. Detect ALL allergens present in the standard recipe for this dish from the following list ONLY: ${allergenList.join(', ')}.
+        ${websiteSearchRule}
+        3. For EU (Basque), if it's a new translation not on the website, you MUST use Google Search to cross-reference with https://www.euskadi.eus/diccionario-elhuyar/.
+
+        4. Detect ALL allergens present in the standard recipe for this dish from the following list ONLY: ${allergenList.join(', ')}.
         
         CRITICAL ALLERGEN RULES:
         - If the dish name explicitly contains a word related to an allergen (e.g., "marisco", "queso", "huevo", "pescado", "calamar"), you MUST ALWAYS include that specific allergen (e.g., "MARISCO", "LACTEOS", "HUEVOS", "PESCADO", "CALAMARES").
@@ -192,11 +207,11 @@ const getApps = async (): Promise<RestaurantConfig[]> => {
     }
 };
 
-const saveApp = async (app: RestaurantConfig) => {
+const saveApp = async (app: RestaurantConfig, isNewApp: boolean = false) => {
     try {
-        await setDoc(doc(db, 'restaurants', app.id), app);
-        // Also save initial platos
-        if (app.initialPlatos && Array.isArray(app.initialPlatos)) {
+        await setDoc(doc(db, 'restaurants', app.id), app, { merge: true });
+        // Also save initial platos only if it's a new app to prevent overwriting existing edited plates
+        if (isNewApp && app.initialPlatos && Array.isArray(app.initialPlatos)) {
             const batch = writeBatch(db);
             app.initialPlatos.forEach(p => {
                 const docRef = doc(collection(db, `restaurants/${app.id}/platos`), p.ID_Plato.toString());
