@@ -60,11 +60,14 @@ export const analyzeDish = async (dishName: string): Promise<{ translations: Rec
     const currentConfig = getActiveConfig();
     let websiteSearchRule = "";
     if (currentConfig.officialWebsite) {
-        let domain = currentConfig.officialWebsite;
-        try {
-            domain = new URL(currentConfig.officialWebsite).hostname;
-        } catch(e) {}
-        websiteSearchRule = `2. You MUST use Google Search with 'site:${domain}' to find the official translations for the given dish name on the restaurant's website. If you find existing translations on the website, YOU MUST PRESERVE AND RETURN THOSE EXACT TRANSLATIONS. Only generate new translations if the dish cannot be found on their website.`;
+        let baseUrl = currentConfig.officialWebsite;
+        if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+        
+        websiteSearchRule = `2. CRITICAL - DO NOT INVENT TRANSLATIONS: The restaurant has an official website at ${baseUrl}. You MUST use Google Search to find the exact translations they already use on their multilingual pages.
+        - For Basque (EU), check: ${baseUrl}/eu/
+        - For English (EN), check: ${baseUrl}/en/
+        - For French (FR), check: ${baseUrl}/fr/
+        If you find the dish on those pages, you MUST return EXACTLY what is written there without changing a single letter. Only generate a new translation if the dish is completely absent from the website.`;
     } else {
         websiteSearchRule = "2. (No official website configured for this restaurant, generate standard translations).";
     }

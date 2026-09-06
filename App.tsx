@@ -16,11 +16,17 @@ const MainLayout = () => {
     const [isAdminMode, setIsAdminMode] = useState(() => {
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
-            return params.get('admin') === 'true' || window.location.hash === '#admin';
+            const isPathGestion = window.location.pathname.toLowerCase().includes('/gestion');
+            return params.get('admin') === 'true' || window.location.hash === '#admin' || isPathGestion;
         }
         return false;
     });
-    const hasAdminAccess = showMasterPanelButton || (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === 'true');
+    
+    const hasAdminAccess = showMasterPanelButton || (typeof window !== 'undefined' && (
+        new URLSearchParams(window.location.search).get('admin') === 'true' || 
+        window.location.hash === '#admin' ||
+        window.location.pathname.toLowerCase().includes('/gestion')
+    ));
 
     useEffect(() => {
         document.title = `${config.name} - Carta Digital`;
