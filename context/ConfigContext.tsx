@@ -24,6 +24,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const isClientUrl = searchParams.get('client') === 'true';
     const isOwnerUrl = searchParams.get('admin') === 'true';
     const isMasterAdmin = !isClientUrl && !isOwnerUrl;
+    const [isInitializing, setIsInitializing] = useState(true);
 
     const [config, setConfigState] = useState<RestaurantConfig>(() => {
         const init = getActiveConfig();
@@ -77,7 +78,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             } catch (e) {
                 console.error("Error cargando registro de apps:", e);
                 setAvailableApps([bolinaConfig]);
-            }
+            } finally { setIsInitializing(false); }
         };
         loadRegistry();
     }, [isMasterAdmin]);
@@ -159,6 +160,8 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             alert("Error al eliminar la aplicación.");
         }
     }, []);
+
+    if (isInitializing && !isMasterAdmin) return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><div className="animate-pulse flex flex-col items-center gap-4"><div className="w-12 h-12 border-4 border-slate-700 border-t-white rounded-full animate-spin"></div><p className="text-slate-400 font-medium">Cargando restaurante...</p></div></div>;
 
     return (
         <ConfigContext.Provider value={{

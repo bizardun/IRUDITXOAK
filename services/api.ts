@@ -4,6 +4,7 @@ import type { Plato, RestaurantConfig, Alergeno } from '../types';
 import { getActiveConfig, bolinaConfig } from '../config/restaurant';
 import { db } from './firebase';
 import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, onSnapshot } from 'firebase/firestore';
+import kanalaDictionary from '../src/data/kanala_dictionary.json';
 
 
 const apiKey = typeof process !== 'undefined' && process.env && process.env.API_KEY
@@ -22,6 +23,36 @@ const extractSources = (response: any) => {
 
 export const translateText = async (text: string, targetLang: string, targetLangName: string): Promise<{text: string, sources: any[]}> => {
     if (!text || !apiKey) return { text, sources: [] };
+    
+    // Check local knowledge base for Kanala
+    const currentConfig = getActiveConfig();
+    if (currentConfig.officialWebsite && currentConfig.officialWebsite.includes('kanalabeach')) {
+        const normalizedText = text.trim().toLowerCase();
+        const strippedText = normalizedText.replace(/\s*\(.*?\)\s*/g, '').trim();
+        
+        // Search by exact dish name or exact description
+        const match = kanalaDictionary.find((d: any) => 
+            (d.desc_es && d.desc_es.toLowerCase() === normalizedText) || 
+            (d.plato_es && d.plato_es.toLowerCase() === normalizedText) ||
+            (d.plato_es && d.plato_es.toLowerCase() === strippedText)
+        );
+        
+        if (match) {
+            let directTranslation = null;
+            if (targetLang === 'EU' && match.desc_eu && match.desc_es && match.desc_es.toLowerCase() === normalizedText) directTranslation = match.desc_eu;
+            if (targetLang === 'EN' && match.desc_en && match.desc_es && match.desc_es.toLowerCase() === normalizedText) directTranslation = match.desc_en;
+            if (targetLang === 'FR' && match.desc_fr && match.desc_es && match.desc_es.toLowerCase() === normalizedText) directTranslation = match.desc_fr;
+            
+            if (targetLang === 'EU' && match.plato_eu && match.plato_es && (match.plato_es.toLowerCase() === normalizedText || match.plato_es.toLowerCase() === strippedText)) directTranslation = match.plato_eu;
+            if (targetLang === 'EN' && match.plato_en && match.plato_es && (match.plato_es.toLowerCase() === normalizedText || match.plato_es.toLowerCase() === strippedText)) directTranslation = match.plato_en;
+            if (targetLang === 'FR' && match.plato_fr && match.plato_es && (match.plato_es.toLowerCase() === normalizedText || match.plato_es.toLowerCase() === strippedText)) directTranslation = match.plato_fr;
+
+            if (directTranslation) {
+                return { text: directTranslation, sources: [] };
+            }
+        }
+    }
+
     try {
         const isBasque = targetLang === 'EU';
         const systemPrompt = `You are a professional restaurant translator and culinary expert.
@@ -63,11 +94,26 @@ export const analyzeDish = async (dishName: string): Promise<{ translations: Rec
         let baseUrl = currentConfig.officialWebsite;
         if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
         
-        websiteSearchRule = `2. CRITICAL - DO NOT INVENT TRANSLATIONS: The restaurant has an official website at ${baseUrl}. You MUST use Google Search to find the exact translations they already use on their multilingual pages.
+        let exactMatchStr = "";
+        if (baseUrl.includes('kanalabeach')) {
+            const normalizedDishName = dishName.trim().toLowerCase();
+            const match = kanalaDictionary.find((d: any) => d.plato_es.toLowerCase() === normalizedDishName);
+            if (match) {
+                exactMatchStr = `
+        WE FOUND THE OFFICIAL TRANSLATIONS IN THE KNOWLEDGE BASE FOR THIS EXACT DISH. YOU MUST USE THESE EXACT STRINGS WITHOUT INVENTING ANYTHING NEW:
+        - Basque (EU): "${match.plato_eu}"
+        - English (EN): "${match.plato_en}"
+        - French (FR): "${match.plato_fr}"
+        For these 3 languages, DO NOT perform a web search. Just output those exact strings.
+        For German (DE) and Italian (IT), generate the translation yourself.`;
+            }
+        }
+
+        websiteSearchRule = `2. CRITICAL - DO NOT INVENT TRANSLATIONS: The restaurant has an official website at ${baseUrl}. ${exactMatchStr ? exactMatchStr : `You MUST use Google Search to find the exact translations they already use on their multilingual pages.
         - For Basque (EU), check: ${baseUrl}/eu/
         - For English (EN), check: ${baseUrl}/en/
         - For French (FR), check: ${baseUrl}/fr/
-        If you find the dish on those pages, you MUST return EXACTLY what is written there without changing a single letter. Only generate a new translation if the dish is completely absent from the website.`;
+        If you find the dish on those pages, you MUST return EXACTLY what is written there without changing a single letter. Only generate a new translation if the dish is completely absent from the website.`}`;
     } else {
         websiteSearchRule = "2. (No official website configured for this restaurant, generate standard translations).";
     }
