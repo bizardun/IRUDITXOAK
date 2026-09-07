@@ -9,7 +9,7 @@ export type Alergeno = "GLUTEN" | "CRUSTACEOS" | "HUEVOS" | "PESCADO" | "CACAHUE
 
 export interface Plato {
     ID_Plato: number;
-    Precio: number;
+    Precio: number | string;
     ES_Nombre: string;
     EU_Nombre: string;
     EN_Nombre: string;

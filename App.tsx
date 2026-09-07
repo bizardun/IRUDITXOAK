@@ -4,6 +4,7 @@ import { DataProvider } from './context/DataContext';
 import { ConfigProvider, useConfig } from './context/ConfigContext';
 import ClienteApp from './components/cliente/ClienteApp';
 import GestionApp from './components/gestion/GestionApp';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import FactoryDashboard from './components/factory/FactoryDashboard';
 
 // Iconos para la barra de navegación
@@ -96,7 +97,7 @@ const MainLayout = () => {
                         </div>
                     </div>
                 )}
-                {isAdminMode ? <GestionApp /> : <ClienteApp />}
+                {isAdminMode ? <ErrorBoundary><GestionApp /></ErrorBoundary> : <ClienteApp />}
             </div>
         </DataProvider>
     );

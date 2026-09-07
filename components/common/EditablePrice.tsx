@@ -8,11 +8,11 @@ interface EditablePriceProps {
 }
 
 const EditablePrice: React.FC<EditablePriceProps> = ({ initialPrice, platoId, refreshData }) => {
-    const [price, setPrice] = useState(initialPrice.toFixed(2));
+    const [price, setPrice] = useState((typeof initialPrice === 'number' ? initialPrice.toFixed(2) : String(initialPrice)));
     const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
-        setPrice(initialPrice.toFixed(2));
+        setPrice((typeof initialPrice === 'number' ? initialPrice.toFixed(2) : String(initialPrice)));
     }, [initialPrice]);
 
     const handleBlur = async () => {
@@ -22,7 +22,7 @@ const EditablePrice: React.FC<EditablePriceProps> = ({ initialPrice, platoId, re
             await api.updatePlato(platoId, { Precio: newPrice });
             await refreshData();
         } else {
-            setPrice(initialPrice.toFixed(2));
+            setPrice((typeof initialPrice === 'number' ? initialPrice.toFixed(2) : String(initialPrice)));
         }
     };
     
@@ -47,7 +47,7 @@ const EditablePrice: React.FC<EditablePriceProps> = ({ initialPrice, platoId, re
         />
     ) : (
         <span onClick={() => setIsEditing(true)} className="cursor-pointer hover:bg-gray-100 px-1 rounded">
-             {`€${initialPrice.toFixed(2)}`}
+             {`€${(typeof initialPrice === 'number' ? initialPrice.toFixed(2) : String(initialPrice))}`}
         </span>
     );
 };

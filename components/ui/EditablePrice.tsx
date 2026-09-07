@@ -3,19 +3,19 @@ import { useConfig } from '../../context/ConfigContext';
 import api from '../../services/api';
 
 interface EditablePriceProps {
-    price: number;
+    price: number | string;
     id?: number; 
     onUpdate: () => void;
-    onSave?: (newPrice: number) => Promise<void>;
+    onSave?: (newPrice: number | string) => Promise<void>;
 }
 
 export const EditablePrice: React.FC<EditablePriceProps> = ({ price, id, onUpdate, onSave }) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [val, setVal] = useState(price.toFixed(2));
+    const [val, setVal] = useState(typeof price === 'number' ? price.toFixed(2) : String(price));
     const { config } = useConfig();
     const isKanala = config?.name?.toLowerCase().includes('kanala') || false;
 
-    useEffect(() => setVal(price.toFixed(2)), [price]);
+    useEffect(() => setVal(typeof price === 'number' ? price.toFixed(2) : String(price)), [price]);
 
     const save = async () => {
         setIsEditing(false);
@@ -28,7 +28,7 @@ export const EditablePrice: React.FC<EditablePriceProps> = ({ price, id, onUpdat
             }
             onUpdate();
         } else {
-            setVal(price.toFixed(2));
+            setVal(typeof price === 'number' ? price.toFixed(2) : String(price));
         }
     };
 
@@ -51,5 +51,5 @@ export const EditablePrice: React.FC<EditablePriceProps> = ({ price, id, onUpdat
             />
         );
     }
-    return <span onClick={() => setIsEditing(true)} className={`cursor-pointer border px-2 py-1 rounded-md transition-colors shadow-sm text-sm font-medium ${isKanala ? "border-white/20 bg-neutral-900 text-white hover:border-white/60 hover:bg-white/10" : "border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"}`}>€{price.toFixed(2)}</span>;
+    return <span onClick={() => setIsEditing(true)} className={`cursor-pointer border px-2 py-1 rounded-md transition-colors shadow-sm text-sm font-medium ${isKanala ? "border-white/20 bg-neutral-900 text-white hover:border-white/60 hover:bg-white/10" : "border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"}`}>{typeof price === 'number' ? `€${price.toFixed(2)}` : price}</span>;
 };

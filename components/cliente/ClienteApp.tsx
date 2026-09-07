@@ -85,7 +85,7 @@ const DishItem: React.FC<DishItemProps> = ({
                     {!isMenuMode && p.Precio > 0 && (
                         <div className={`w-12 sm:w-16 text-right flex-shrink-0 transition-opacity duration-300 ${isRestricted ? 'opacity-40' : ''}`}>
                             <span className={`text-[13px] sm:text-base font-bold whitespace-nowrap ${isKanala ? 'text-white' : 'text-slate-900'}`}>
-                                €{p.Precio.toFixed(2)}
+                                {typeof p.Precio === 'number' ? `€${p.Precio.toFixed(2)}` : p.Precio}
                             </span>
                         </div>
                     )}
@@ -294,7 +294,7 @@ const ClienteApp: React.FC = () => {
             if (!groups[k]) groups[k] = [];
             groups[k].push(p);
         });
-        const order: TipoPlato[] = ['ENTRANTE', 'ENSALADA', 'ARROZ', 'MARISCO', 'PESCADO', 'CARNE', 'POSTRE'];
+        const order: string[] = ['PRODUCTO', 'PARA PICAR', 'DEL MAR', 'DE LA TIERRA', 'ARROCES', 'HAMBURGUESAS', 'PIZZAS', 'ENTRANTE', 'ENSALADA', 'ARROZ', 'MARISCO', 'PESCADO', 'CARNE', 'POSTRE'];
         const sortedKeys = Object.keys(groups).sort((a, b) => {
             const ia = order.indexOf(a as TipoPlato);
             const ib = order.indexOf(b as TipoPlato);
