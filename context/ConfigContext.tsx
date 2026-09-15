@@ -9,6 +9,7 @@ interface ConfigContextType {
     showMasterPanelButton: boolean;
     availableApps: RestaurantConfig[];
     loadApp: (id: string) => void;
+    updateAppConfig: (updates: Partial<RestaurantConfig>) => Promise<void>;
     createApp: (name: string, prompt: string, fileData: string | null, mimeType: string | null, theme: ThemeConfig) => Promise<void>;
     deleteApp: (id: string) => void;
     enterFactory: () => void;
@@ -161,7 +162,20 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, []);
 
-    if (isInitializing && !isMasterAdmin) return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><div className="animate-pulse flex flex-col items-center gap-4"><div className="w-12 h-12 border-4 border-slate-700 border-t-white rounded-full animate-spin"></div><p className="text-slate-400 font-medium">Cargando restaurante...</p></div></div>;
+    
+    const updateAppConfig = async (updates: Partial<RestaurantConfig>) => {
+        try {
+            const updated = { ...config, ...updates };
+            await api.saveApp(updated, false);
+            setConfigState(updated);
+            setAvailableApps(prev => prev.map(a => a.id === updated.id ? updated : a));
+        } catch (e) {
+            console.error("Error updating config:", e);
+        }
+    };
+
+    if (isInitializing && !isMasterAdmin)
+ return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><div className="animate-pulse flex flex-col items-center gap-4"><div className="w-12 h-12 border-4 border-slate-700 border-t-white rounded-full animate-spin"></div><p className="text-slate-400 font-medium">Cargando restaurante...</p></div></div>;
 
     return (
         <ConfigContext.Provider value={{
@@ -170,6 +184,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             showMasterPanelButton,
             availableApps,
             loadApp,
+            updateAppConfig,
             createApp,
             deleteApp,
             enterFactory: () => setIsFactoryMode(true),

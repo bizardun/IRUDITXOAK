@@ -113,7 +113,7 @@ export default function FactoryDashboard() {
         setCopiedAdmin(false);
         setShowQr(false);
         setTimeout(() => {
-            const baseUrl = 'https://ais-pre-i7k7exrqtpi6zwjsrpoplx-11277431321.europe-west2.run.app';
+            const baseUrl = app.publicUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://ais-pre-i7k7exrqtpi6zwjsrpoplx-11277431321.europe-west2.run.app');
             setClientUrl(`${baseUrl}/?app=${app.id}&client=true`);
             setAdminUrl(`${baseUrl}/?app=${app.id}&admin=true`);
             setIsDeploying(false);
@@ -206,7 +206,7 @@ export default function FactoryDashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white font-sans p-4 sm:p-8 relative">
+        <div className="min-h-screen bg-[#0b0f12] text-white font-sans p-4 sm:p-8 relative">
             
             {/* Modal de Compartir */}
             {sharingApp && (
@@ -340,20 +340,20 @@ export default function FactoryDashboard() {
                                     {isDeleteMode ? <><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg> Terminar Edición</> : <><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Gestionar / Eliminar</>}
                                 </button>
                                 {!isDeleteMode && (
-                                    <button onClick={() => setStep('create')} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-blue-900/50 transition-all flex items-center gap-2">
+                                    <button onClick={() => setStep('create')} className="bg-[#0b1727] hover:bg-[#152840] border border-cyan-500/50 hover:border-cyan-400 text-cyan-300 px-4 py-2 rounded-lg font-bold shadow-[0_0_10px_rgba(34,211,238,0.2)] hover:shadow-[0_0_15px_rgba(34,211,238,0.5)] transition-all flex items-center gap-2 uppercase tracking-wider text-xs">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Nueva App AI
                                     </button>
                                 )}
                             </div>
                         </div>
 
-                        {isDeleteMode && <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-center text-sm font-bold animate-fade-in">MODO ELIMINACIÓN: Selecciona la aplicación que deseas borrar permanentemente.</div>}
+                        {isDeleteMode && <div className="bg-[#1a0f0f] border border-red-500 rounded-lg p-3 text-red-400 text-center text-sm font-bold animate-fade-in shadow-[0_0_15px_rgba(239,68,68,0.3)]">MODO ELIMINACIÓN: Selecciona la aplicación que deseas borrar permanentemente.</div>}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {availableApps.map((app, index) => (
-                                <div key={`${app.id}-${index}`} onClick={() => !isDeleteMode && loadApp(app.id)} className={`group relative rounded-xl p-6 border transition-all cursor-pointer shadow-lg flex flex-col justify-between ${isDeleteMode ? 'bg-slate-800 border-red-500/50 ring-2 ring-red-500/20' : 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:shadow-blue-900/20 hover:-translate-y-1'}`}>
+                                <div key={`${app.id}-${index}`} onClick={() => !isDeleteMode && loadApp(app.id)} className={`group relative rounded-xl p-6 border transition-all cursor-pointer flex flex-col justify-between overflow-hidden bg-gradient-to-b from-[#1a1c1e] to-[#121415] ${isDeleteMode ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'border-cyan-500/30 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:-translate-y-1'}`}>
                                     {isDeleteMode && app.id !== 'bolina_viejo_v1' && (
-                                        <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-[2px] z-50 rounded-xl flex items-center justify-center animate-fade-in">
+                                        <div className="absolute inset-0 bg-[#000000]/80 backdrop-blur-[2px] z-50 rounded-xl flex items-center justify-center animate-fade-in">
                                             <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(app.id); }} className={`${confirmDeleteId === app.id ? 'bg-red-700 scale-110 border-red-300 animate-pulse' : 'bg-red-600 hover:bg-red-500 border-red-400 hover:scale-105'} text-white px-6 py-3 rounded-full font-bold shadow-xl transform transition-all flex items-center gap-2 border-2`}>
                                                 {confirmDeleteId === app.id ? <><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg> ¿CONFIRMAR?</> : <><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> ELIMINAR</>}
                                             </button>
@@ -363,10 +363,18 @@ export default function FactoryDashboard() {
 
                                     <div>
                                         <div className="flex justify-between items-start mb-4 opacity-100">
-                                             <div className="w-14 h-14 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl flex items-center justify-center text-3xl shadow-inner border border-slate-600/50">{(app?.name || 'A').charAt(0).toUpperCase()}</div>
-                                            {app.theme && <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full border ${app.theme.style === 'modern' ? 'bg-blue-900/30 text-blue-400 border-blue-500/30' : app.theme.style === 'fresh' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-500/30' : 'bg-amber-900/30 text-amber-400 border-amber-500/30'}`}>{app.theme.style}</span>}
+                                             <div className="w-14 h-14 bg-gradient-to-br from-[#0f172a] to-[#020617] rounded-xl flex items-center justify-center shadow-inner border border-cyan-900/50 overflow-hidden">
+                                                {app.name.toLowerCase().includes('kanala') ? (
+                                                    <img src="https://www.kanalabeach.eus/wp-content/uploads/2024/06/kanala-logos_LOGO-HORIZONTAL-zuria.png" alt={app.name} className="w-full h-full object-contain p-1" />
+                                                ) : app.name.toLowerCase().includes('boliña') ? (
+                                                    <img src="/logo boliña sin fondo.jfif" alt={app.name} className="w-full h-full object-contain bg-white" />
+                                                ) : (
+                                                    <span className="text-3xl text-white">{(app?.name || 'A').charAt(0).toUpperCase()}</span>
+                                                )}
+                                            </div>
+                                            {app.theme && <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full border ${app.theme.style === 'modern' ? 'bg-blue-900/30 text-blue-400 border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : app.theme.style === 'fresh' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-amber-900/30 text-amber-400 border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'}`}>{app.theme.style}</span>}
                                         </div>
-                                        <div className="space-y-1 mb-4"><h3 className="font-bold text-lg text-white leading-tight truncate pr-4">{app.name}</h3>{app.slogan && <p className="text-slate-400 text-xs truncate">{app.slogan}</p>}</div>
+                                        <div className="space-y-1 mb-4"><h3 className="font-bold text-lg text-cyan-50 leading-tight truncate pr-4 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">{app.name}</h3>{app.slogan && <p className="text-slate-400 text-xs truncate">{app.slogan}</p>}</div>
                                         
                                         {/* Acciones rápidas en tarjeta */}
                                         <div className="mt-4 flex gap-2">
@@ -379,13 +387,13 @@ export default function FactoryDashboard() {
                                             </button>
                                             <button 
                                                 onClick={(e) => handleShareClick(e, app)}
-                                                className="flex-1 flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white py-1.5 rounded-lg text-xs font-bold transition-all border border-slate-600"
+                                                className="flex-1 flex items-center justify-center gap-1.5 bg-[#0f172a] hover:bg-[#1e293b] text-cyan-300 py-1.5 rounded-lg text-xs font-bold transition-all border border-cyan-800/50 hover:border-cyan-400 hover:shadow-[0_0_10px_rgba(34,211,238,0.3)]"
                                             >
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h7v7H3z"/></svg> QR
                                             </button>
                                             <button 
                                                 onClick={(e) => handleWebsiteClick(e, app)}
-                                                className="flex-1 flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white py-1.5 rounded-lg text-xs font-bold transition-all border border-slate-600"
+                                                className="flex-1 flex items-center justify-center gap-1.5 bg-[#0f172a] hover:bg-[#1e293b] text-cyan-300 py-1.5 rounded-lg text-xs font-bold transition-all border border-cyan-800/50 hover:border-cyan-400 hover:shadow-[0_0_10px_rgba(34,211,238,0.3)]"
                                                 title="Configurar Web Oficial"
                                             >
                                                 <svg width="14" height="14" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Web
@@ -397,11 +405,11 @@ export default function FactoryDashboard() {
                                         <span className="text-xs text-slate-500 font-mono">{app.initialPlatos?.length || 0} platos</span>
                                         {!isDeleteMode && (
                                             <div className="flex items-center gap-2">
-                                                 <button onClick={(e) => handleDownloadApp(e, app)} disabled={isZipping} className="bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 p-2 rounded-lg transition-all hover:scale-105 shadow-sm" title="Descargar ZIP">
+                                                 <button onClick={(e) => handleDownloadApp(e, app)} disabled={isZipping} className="bg-[#0f172a] border border-indigo-500/50 hover:border-indigo-400 text-indigo-400 p-2 rounded-lg transition-all hover:shadow-[0_0_10px_rgba(99,102,241,0.4)]" title="Descargar ZIP">
                                                     {isZipping ? <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : <IconDownload />}
                                                 </button>
-                                                <button onClick={(e) => handleShareClick(e, app)} className="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-lg transition-all hover:scale-105 shadow-sm" title="Desplegar"><IconRocket /></button>
-                                                <button className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-bold px-3 py-2 rounded-lg transition-colors flex items-center gap-1 group-hover:bg-emerald-600 group-hover:text-white">Abrir <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+                                                <button onClick={(e) => handleShareClick(e, app)} className="bg-[#0f172a] border border-fuchsia-500/50 hover:border-fuchsia-400 text-fuchsia-400 p-2 rounded-lg transition-all hover:shadow-[0_0_10px_rgba(217,70,239,0.4)]" title="Desplegar"><IconRocket /></button>
+                                                <button className="bg-[#0b1727] border border-cyan-500/50 hover:border-cyan-400 text-cyan-300 text-xs font-bold px-3 py-2 rounded-lg transition-all flex items-center gap-1 hover:shadow-[0_0_10px_rgba(34,211,238,0.5)]">Abrir <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
                                             </div>
                                         )}
                                     </div>

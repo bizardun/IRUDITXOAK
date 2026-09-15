@@ -25,7 +25,7 @@ export const translations: Translations = {
         ocultarAlergenos: "Ocultar Alérgenos",
         ivaYDatos: "I.V.A. INCLUIDO • DATOS EN TIEMPO REAL",
         visitarWeb: "VISITAR WEB OFICIAL",
-        tipos: { ENTRANTE: "Entrantes", ENSALADA: "Ensaladas", ARROZ: "Arroces", MARISCO: "Mariscos", PESCADO: "Pescados", CARNE: "Carnes", POSTRE: "Postres" },
+        tipos: { ENTRANTE: "Entrantes", ENSALADA: "Ensaladas", ARROZ: "Arroces", MARISCO: "Mariscos", PESCADO: "Pescados", CARNE: "Carnes", POSTRE: "Postres", PRODUCTO: "Producto", "PARA PICAR": "Para Picar", "DEL MAR": "Del Mar", "DE LA TIERRA": "De la Tierra", ARROCES: "Arroces", HAMBURGUESAS: "Hamburguesas", PIZZAS: "Pizzas", CARNES: "Carnes", PESCADOS: "Pescados", POSTRES: "Postres", "BRASA JOSPER": "Brasa Josper", GUARNICIONES: "Guarniciones", OTROS: "Otros" },
         alergenos: {
             GLUTEN: "Gluten", CRUSTACEOS: "Crustáceos", HUEVOS: "Huevos", PESCADO: "Pescado", 
             CACAHUETES: "Cacahuetes", SOJA: "Soja", LACTEOS: "Lácteos", 
@@ -61,7 +61,7 @@ export const translations: Translations = {
         ocultarAlergenos: "Alergenoak Ezkutatu",
         ivaYDatos: "BEZ BARNE • DATUAK DENBORA ERREALEAN",
         visitarWeb: "WEB OFIZIALA BISITATU",
-        tipos: { ENTRANTE: "Hasierakoak", ENSALADA: "Entsaladak", ARROZ: "Arrozak", MARISCO: "Itsaskiak", PESCADO: "Arrainak", CARNE: "Haragiak", POSTRE: "Postreak" },
+        tipos: { ENTRANTE: "Hasierakoak", ENSALADA: "Entsaladak", ARROZ: "Arrozak", MARISCO: "Itsaskiak", PESCADO: "Arrainak", CARNE: "Haragiak", POSTRE: "Postreak", PRODUCTO: "Produktua", "PARA PICAR": "Pikatzeko", "DEL MAR": "Itsasokoak", "DE LA TIERRA": "Lurrekoak", ARROCES: "Arrozak", HAMBURGUESAS: "Hanburgesak", PIZZAS: "Pizzak", CARNES: "Okelak", PESCADOS: "Arrainak", POSTRES: "Azkenburukoak", "BRASA JOSPER": "Josper Txingarra", GUARNICIONES: "Hornigaiak", OTROS: "Beste batzuk" },
         alergenos: {
             GLUTEN: "Glutena", CRUSTACEOS: "Krustazeoak", HUEVOS: "Arrautzak", PESCADO: "Arraina", 
             CACAHUETES: "Kakahueteak", SOJA: "Soja", LACTEOS: "Esnekiak", 
@@ -82,7 +82,7 @@ export const translations: Translations = {
         ocultarAlergenos: "Hide Allergens",
         ivaYDatos: "V.A.T. INCLUDED • REAL-TIME DATA",
         visitarWeb: "VISIT OFFICIAL WEBSITE",
-        tipos: { ENTRANTE: "Starters", ENSALADA: "Salads", ARROZ: "Rice", MARISCO: "Seafood", PESCADO: "Fish", CARNE: "Meats", POSTRE: "Desserts" },
+        tipos: { ENTRANTE: "Starters", ENSALADA: "Salads", ARROZ: "Rice", MARISCO: "Seafood", PESCADO: "Fish", CARNE: "Meats", POSTRE: "Desserts", PRODUCTO: "Snacks", "PARA PICAR": "To Share", "DEL MAR": "From the sea", "DE LA TIERRA": "From the land", ARROCES: "Rice dishes", HAMBURGUESAS: "Hamburgers", PIZZAS: "Pizzas", CARNES: "Meat", PESCADOS: "Fish", POSTRES: "Desserts", "BRASA JOSPER": "Josper Charcoal Grill", GUARNICIONES: "Sides", OTROS: "Others" },
         alergenos: {
             GLUTEN: "Gluten", CRUSTACEOS: "Crustaceans", HUEVOS: "Eggs", PESCADO: "Fish", 
             CACAHUETES: "Peanuts", SOJA: "Soy", LACTEOS: "Dairy", 
@@ -103,7 +103,7 @@ export const translations: Translations = {
         ocultarAlergenos: "Masquer Allergènes",
         ivaYDatos: "T.V.A. INCLUSE • DONNÉES EN TEMPS RÉEL",
         visitarWeb: "VISITER LE SITE WEB OFFICIEL",
-        tipos: { ENTRANTE: "Entrées", ENSALADA: "Salades", ARROZ: "Riz", MARISCO: "Fruits de mer", PESCADO: "Poissons", CARNE: "Viandes", POSTRE: "Desserts" },
+        tipos: { ENTRANTE: "Entrées", ENSALADA: "Salades", ARROZ: "Riz", MARISCO: "Fruits de mer", PESCADO: "Poissons", CARNE: "Viandes", POSTRE: "Desserts", PRODUCTO: "À grignoter", "PARA PICAR": "Pour picorer", "DEL MAR": "De la mer", "DE LA TIERRA": "De la terre", ARROCES: "Plats de riz", HAMBURGUESAS: "Hamburgers", PIZZAS: "Pizzas", CARNES: "Viandes", PESCADOS: "Poissons", POSTRES: "Desserts", "BRASA JOSPER": "Grillade Josper", GUARNICIONES: "Accompagnements", OTROS: "Autres" },
         alergenos: {
             GLUTEN: "Gluten", CRUSTACEOS: "Crustacés", HUEVOS: "Œufs", PESCADO: "Poisson", 
             CACAHUETES: "Arachides", SOJA: "Soja", LACTEOS: "Produits laitiers", 
@@ -124,7 +124,7 @@ export const translations: Translations = {
         ocultarAlergenos: "Allergene ausblenden",
         ivaYDatos: "MWST. INKLUSIVE • ECHTZEITDATEN",
         visitarWeb: "OFFIZIELLE WEBSITE BESUCHEN",
-        tipos: { ENTRANTE: "Vorspeisen", ENSALADA: "Salate", ARROZ: "Reis", MARISCO: "Meeresfrüchte", PESCADO: "Fisch", CARNE: "Fleisch", POSTRE: "Desserts" },
+        tipos: { ENTRANTE: "Vorspeisen", ENSALADA: "Salate", ARROZ: "Reis", MARISCO: "Meeresfrüchte", PESCADO: "Fisch", CARNE: "Fleisch", POSTRE: "Desserts", PRODUCTO: "Produkt", "PARA PICAR": "Für den kleinen Hunger", "DEL MAR": "Aus dem Meer", "DE LA TIERRA": "Vom Land", ARROCES: "Reisgerichte", HAMBURGUESAS: "Hamburger", PIZZAS: "Pizzas", CARNES: "Fleisch", PESCADOS: "Fisch", POSTRES: "Desserts", "BRASA JOSPER": "Josper Holzkohlegrill", GUARNICIONES: "Beilagen", OTROS: "Andere" },
         alergenos: {
             GLUTEN: "Gluten", CRUSTACEOS: "Krebstiere", HUEVOS: "Eier", PESCADO: "Fisch", 
             CACAHUETES: "Erdnüsse", SOJA: "Soja", LACTEOS: "Milchprodukte", 
@@ -145,7 +145,7 @@ export const translations: Translations = {
         ocultarAlergenos: "Nascondi Allergeni",
         ivaYDatos: "I.V.A. INCLUSA • DATI IN TEMPO REALE",
         visitarWeb: "VISITA IL SITO UFFICIALE",
-        tipos: { ENTRANTE: "Antipasti", ENSALADA: "Insalate", ARROZ: "Riso", MARISCO: "Frutti di mare", PESCADO: "Pesce", CARNE: "Carne", POSTRE: "Dolci" },
+        tipos: { ENTRANTE: "Antipasti", ENSALADA: "Insalate", ARROZ: "Riso", MARISCO: "Frutti di mare", PESCADO: "Pesce", CARNE: "Carne", POSTRE: "Dolci", PRODUCTO: "Prodotto", "PARA PICAR": "Stuzzichini", "DEL MAR": "Dal mare", "DE LA TIERRA": "Dalla terra", ARROCES: "Piatti di riso", HAMBURGUESAS: "Hamburger", PIZZAS: "Pizze", CARNES: "Carne", PESCADOS: "Pesce", POSTRES: "Dolci", "BRASA JOSPER": "Griglia Josper", GUARNICIONES: "Contorni", OTROS: "Altro" },
         alergenos: {
             GLUTEN: "Glutine", CRUSTACEOS: "Crostacei", HUEVOS: "Uova", PESCADO: "Pesce", 
             CACAHUETES: "Arachidi", SOJA: "Soia", LACTEOS: "Latticini", 

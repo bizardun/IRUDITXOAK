@@ -1,23 +1,38 @@
 import re
 
 with open('context/ConfigContext.tsx', 'r', encoding='utf-8') as f:
-    content = f.read()
+    c = f.read()
 
-# Add isInitializing to context type? No, just local state.
-content = content.replace(
-    "const isMasterAdmin = !isClientUrl && !isOwnerUrl;",
-    "const isMasterAdmin = !isClientUrl && !isOwnerUrl;\n    const [isInitializing, setIsInitializing] = useState(true);"
+# Add to ConfigContextType
+c = c.replace(
+    'loadApp: (id: string) => void;',
+    'loadApp: (id: string) => void;\n    updateAppConfig: (updates: Partial<RestaurantConfig>) => Promise<void>;'
 )
 
-content = content.replace(
-    "setAvailableApps([bolinaConfig]);\n            }",
-    "setAvailableApps([bolinaConfig]);\n            } finally { setIsInitializing(false); }"
-)
+# Add implementation
+update_fn = """
+    const updateAppConfig = async (updates: Partial<RestaurantConfig>) => {
+        try {
+            const updated = { ...config, ...updates };
+            await api.saveApp(updated, false);
+            setConfigState(updated);
+            setAvailableApps(prev => prev.map(a => a.id === updated.id ? updated : a));
+        } catch (e) {
+            console.error("Error updating config:", e);
+        }
+    };
 
-content = content.replace(
-    "return (\n        <ConfigContext.Provider value={{",
-    "if (isInitializing && !isMasterAdmin) return <div className=\"min-h-screen bg-slate-900 flex items-center justify-center\"><div className=\"animate-pulse flex flex-col items-center gap-4\"><div className=\"w-12 h-12 border-4 border-slate-700 border-t-white rounded-full animate-spin\"></div><p className=\"text-slate-400 font-medium\">Cargando restaurante...</p></div></div>;\n\n    return (\n        <ConfigContext.Provider value={{"
+    if (isInitializing && !isMasterAdmin)
+"""
+
+c = c.replace('if (isInitializing && !isMasterAdmin)', update_fn)
+
+# Export in provider
+c = c.replace(
+    'loadApp,',
+    'loadApp,\n            updateAppConfig,'
 )
 
 with open('context/ConfigContext.tsx', 'w', encoding='utf-8') as f:
-    f.write(content)
+    f.write(c)
+

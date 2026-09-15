@@ -1,85 +1,46 @@
 import re
 
-with open('types.ts', 'r') as f:
-    content = f.read()
+with open('constants.ts', 'r', encoding='utf-8') as f:
+    c = f.read()
 
-old_dict = """export interface TranslationDictionary {
-    menuDelDia: string;
-    carta: string;
-    raciones: string;
-    primerosPlatos: string;
-    segundosPlatos: string;
-    postres: string;
-    precioPersona: string;
-    infoAlergenos: string;
-    mostrarAlergenos: string;
-    ocultarAlergenos: string;
-    tipos: { [key: string]: string };
-    alergenos: { [key: string]: string };
-    gestion?: GestionTranslations;
-}"""
-
-new_dict = """export interface TranslationDictionary {
-    menuDelDia: string;
-    carta: string;
-    raciones: string;
-    primerosPlatos: string;
-    segundosPlatos: string;
-    postres: string;
-    precioPersona: string;
-    infoAlergenos: string;
-    mostrarAlergenos: string;
-    ocultarAlergenos: string;
-    ivaYDatos: string;
-    visitarWeb: string;
-    tipos: { [key: string]: string };
-    alergenos: { [key: string]: string };
-    gestion?: GestionTranslations;
-}"""
-
-if old_dict in content:
-    content = content.replace(old_dict, new_dict)
-    with open('types.ts', 'w') as f:
-        f.write(content)
-    print("Updated types.ts")
-else:
-    print("Could not find TranslationDictionary in types.ts")
-
-with open('constants.ts', 'r') as f:
-    constants = f.read()
-
-# Add ES
-constants = constants.replace(
-    'ocultarAlergenos: "Ocultar Alérgenos",',
-    'ocultarAlergenos: "Ocultar Alérgenos",\n        ivaYDatos: "I.V.A. INCLUIDO • DATOS EN TIEMPO REAL",\n        visitarWeb: "VISITAR WEB OFICIAL",'
-)
-# Add EU
-constants = constants.replace(
-    'ocultarAlergenos: "Alergenoak Ezkutatu",',
-    'ocultarAlergenos: "Alergenoak Ezkutatu",\n        ivaYDatos: "BEZ BARNE • DATUAK DENBORA ERREALEAN",\n        visitarWeb: "WEB OFIZIALA BISITATU",'
-)
-# Add EN
-constants = constants.replace(
-    'ocultarAlergenos: "Hide Allergens",',
-    'ocultarAlergenos: "Hide Allergens",\n        ivaYDatos: "V.A.T. INCLUDED • REAL-TIME DATA",\n        visitarWeb: "VISIT OFFICIAL WEBSITE",'
-)
-# Add FR
-constants = constants.replace(
-    'ocultarAlergenos: "Masquer Allergènes",',
-    'ocultarAlergenos: "Masquer Allergènes",\n        ivaYDatos: "T.V.A. INCLUSE • DONNÉES EN TEMPS RÉEL",\n        visitarWeb: "VISITER LE SITE WEB OFFICIEL",'
-)
-# Add DE
-constants = constants.replace(
-    'ocultarAlergenos: "Allergene ausblenden",',
-    'ocultarAlergenos: "Allergene ausblenden",\n        ivaYDatos: "MWST. INKLUSIVE • ECHTZEITDATEN",\n        visitarWeb: "OFFIZIELLE WEBSITE BESUCHEN",'
-)
-# Add IT
-constants = constants.replace(
-    'ocultarAlergenos: "Nascondi Allergeni",',
-    'ocultarAlergenos: "Nascondi Allergeni",\n        ivaYDatos: "I.V.A. INCLUSA • DATI IN TEMPO REALE",\n        visitarWeb: "VISITA IL SITO UFFICIALE",'
+# Tipos translations to add:
+# ES
+c = c.replace(
+    'tipos: { ENTRANTE: "Entrantes", ENSALADA: "Ensaladas", ARROZ: "Arroces", MARISCO: "Mariscos", PESCADO: "Pescados", CARNE: "Carnes", POSTRE: "Postres" },',
+    'tipos: { ENTRANTE: "Entrantes", ENSALADA: "Ensaladas", ARROZ: "Arroces", MARISCO: "Mariscos", PESCADO: "Pescados", CARNE: "Carnes", POSTRE: "Postres", PRODUCTO: "Producto", "PARA PICAR": "Para Picar", "DEL MAR": "Del Mar", "DE LA TIERRA": "De la Tierra", ARROCES: "Arroces", HAMBURGUESAS: "Hamburguesas", PIZZAS: "Pizzas" },'
 )
 
-with open('constants.ts', 'w') as f:
-    f.write(constants)
-print("Updated constants.ts")
+# EU
+c = c.replace(
+    'tipos: { ENTRANTE: "Hasierakoak", ENSALADA: "Entsaladak", ARROZ: "Arrozak", MARISCO: "Itsaskiak", PESCADO: "Arrainak", CARNE: "Haragiak", POSTRE: "Postreak" },',
+    'tipos: { ENTRANTE: "Hasierakoak", ENSALADA: "Entsaladak", ARROZ: "Arrozak", MARISCO: "Itsaskiak", PESCADO: "Arrainak", CARNE: "Haragiak", POSTRE: "Postreak", PRODUCTO: "Produktua", "PARA PICAR": "Pikatzeko", "DEL MAR": "Itsasokoak", "DE LA TIERRA": "Lurrekoak", ARROCES: "Arrozak", HAMBURGUESAS: "Hanburgesak", PIZZAS: "Pizzak" },'
+)
+
+# EN
+c = c.replace(
+    'tipos: { ENTRANTE: "Starters", ENSALADA: "Salads", ARROZ: "Rice", MARISCO: "Seafood", PESCADO: "Fish", CARNE: "Meats", POSTRE: "Desserts" },',
+    'tipos: { ENTRANTE: "Starters", ENSALADA: "Salads", ARROZ: "Rice", MARISCO: "Seafood", PESCADO: "Fish", CARNE: "Meats", POSTRE: "Desserts", PRODUCTO: "Snacks", "PARA PICAR": "To Share", "DEL MAR": "From the sea", "DE LA TIERRA": "From the land", ARROCES: "Rice dishes", HAMBURGUESAS: "Hamburgers", PIZZAS: "Pizzas" },'
+)
+
+# FR
+c = c.replace(
+    'tipos: { ENTRANTE: "Entrées", ENSALADA: "Salades", ARROZ: "Riz", MARISCO: "Fruits de mer", PESCADO: "Poissons", CARNE: "Viandes", POSTRE: "Desserts" },',
+    'tipos: { ENTRANTE: "Entrées", ENSALADA: "Salades", ARROZ: "Riz", MARISCO: "Fruits de mer", PESCADO: "Poissons", CARNE: "Viandes", POSTRE: "Desserts", PRODUCTO: "À grignoter", "PARA PICAR": "Pour picorer", "DEL MAR": "De la mer", "DE LA TIERRA": "De la terre", ARROCES: "Plats de riz", HAMBURGUESAS: "Hamburgers", PIZZAS: "Pizzas" },'
+)
+
+# DE
+c = c.replace(
+    'tipos: { ENTRANTE: "Vorspeisen", ENSALADA: "Salate", ARROZ: "Reis", MARISCO: "Meeresfrüchte", PESCADO: "Fisch", CARNE: "Fleisch", POSTRE: "Desserts" },',
+    'tipos: { ENTRANTE: "Vorspeisen", ENSALADA: "Salate", ARROZ: "Reis", MARISCO: "Meeresfrüchte", PESCADO: "Fisch", CARNE: "Fleisch", POSTRE: "Desserts", PRODUCTO: "Produkt", "PARA PICAR": "Für den kleinen Hunger", "DEL MAR": "Aus dem Meer", "DE LA TIERRA": "Vom Land", ARROCES: "Reisgerichte", HAMBURGUESAS: "Hamburger", PIZZAS: "Pizzas" },'
+)
+
+# IT
+c = c.replace(
+    'tipos: { ENTRANTE: "Antipasti", ENSALADA: "Insalate", ARROZ: "Riso", MARISCO: "Frutti di mare", PESCADO: "Pesce", CARNE: "Carne", POSTRE: "Dolci" },',
+    'tipos: { ENTRANTE: "Antipasti", ENSALADA: "Insalate", ARROZ: "Riso", MARISCO: "Frutti di mare", PESCADO: "Pesce", CARNE: "Carne", POSTRE: "Dolci", PRODUCTO: "Prodotto", "PARA PICAR": "Stuzzichini", "DEL MAR": "Dal mare", "DE LA TIERRA": "Dalla terra", ARROCES: "Piatti di riso", HAMBURGUESAS: "Hamburger", PIZZAS: "Pizze" },'
+)
+
+
+with open('constants.ts', 'w', encoding='utf-8') as f:
+    f.write(c)
 

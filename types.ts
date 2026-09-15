@@ -44,6 +44,7 @@ export interface RestaurantConfig {
     theme?: ThemeConfig;
     adminPassword?: string;
     officialWebsite?: string;
+    publicUrl?: string;
 }
 
 export interface Language {

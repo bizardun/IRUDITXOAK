@@ -17,10 +17,12 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
     const [dateStr, setDateStr] = useState('');
     const [downloading, setDownloading] = useState(false);
     const [downloadingCartel, setDownloadingCartel] = useState(false);
+    const [domain, setDomain] = useState(config.publicUrl || (typeof window !== "undefined" ? window.location.origin : "https://tu-dominio.vercel.app"));
+    const { updateAppConfig } = useConfig();
     const cartelRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const originUrl = typeof window !== 'undefined' ? window.location.origin : 'https://tu-dominio.vercel.app';
+        const originUrl = domain.trim().replace(/\/$/, '');
         const baseUrl = originUrl + "/?app=" + config.id + "&client=true";
         const adminUrl = originUrl + "/?app=" + config.id + "&admin=true";
         setCleanUrl(baseUrl);
@@ -108,6 +110,25 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
                         </button>
                     </div>
                 </div>
+                
+                {/* Domain Config */}
+                <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 sm:px-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 print:hidden">
+                    <div>
+                        <h3 className="font-bold text-amber-900 text-sm">Dominio Público (Importante)</h3>
+                        <p className="text-amber-800 text-xs mt-1">Para evitar la pantalla de bloqueo de Google, debes usar el dominio real donde publiques la app (ej: Vercel, Netlify).</p>
+                    </div>
+                    <div className="flex w-full sm:w-auto gap-2">
+                        <input 
+                            type="text" 
+                            value={domain} 
+                            onChange={(e) => setDomain(e.target.value)}
+                            onBlur={() => updateAppConfig({ publicUrl: domain })}
+                            className="flex-1 sm:w-64 border border-amber-300 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-amber-500 bg-white"
+                            placeholder="https://mi-restaurante.vercel.app"
+                        />
+                    </div>
+                </div>
+
             </div>
 
             <div className="flex-1 flex flex-col xl:flex-row items-center xl:items-start justify-center p-4 sm:p-8 gap-8 overflow-auto bg-slate-100">
