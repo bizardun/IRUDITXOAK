@@ -114,8 +114,8 @@ export default function FactoryDashboard() {
         setShowQr(false);
         setTimeout(() => {
             const baseUrl = app.publicUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://ais-pre-i7k7exrqtpi6zwjsrpoplx-11277431321.europe-west2.run.app');
-            setClientUrl(`${baseUrl}/?app=${app.id}&client=true`);
-            setAdminUrl(`${baseUrl}/?app=${app.id}&admin=true`);
+            setClientUrl(`${baseUrl}/#/?app=${app.id}&client=true`);
+            setAdminUrl(`${baseUrl}/#/?app=${app.id}&admin=true`);
             setIsDeploying(false);
         }, 800);
     };

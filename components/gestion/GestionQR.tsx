@@ -23,8 +23,8 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
 
     useEffect(() => {
         const originUrl = domain.trim().replace(/\/$/, '');
-        const baseUrl = originUrl + "/?app=" + config.id + "&client=true";
-        const adminUrl = originUrl + "/?app=" + config.id + "&admin=true";
+        const baseUrl = originUrl + "/#/?app=" + config.id + "&client=true";
+        const adminUrl = originUrl + "/#/?app=" + config.id + "&admin=true";
         setCleanUrl(baseUrl);
         setAdminCleanUrl(adminUrl);
         const now = new Date();

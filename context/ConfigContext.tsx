@@ -22,8 +22,11 @@ const CURRENT_APP_KEY = 'current_active_app_id';
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-    const isClientUrl = searchParams.get('client') === 'true';
-    const isOwnerUrl = searchParams.get('admin') === 'true';
+    const hashParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.hash.replace(/^#\/?\??/, '')) : new URLSearchParams();
+    
+    const isClientUrl = searchParams.get('client') === 'true' || hashParams.get('client') === 'true';
+    const isOwnerUrl = searchParams.get('admin') === 'true' || hashParams.get('admin') === 'true';
+
     const isMasterAdmin = !isClientUrl && !isOwnerUrl;
     const [isInitializing, setIsInitializing] = useState(true);
 
@@ -66,7 +69,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 setAvailableApps(apps);
 
                 if (!isMasterAdmin) {
-                    const appIdParam = searchParams.get('app');
+                    const appIdParam = searchParams.get('app') || hashParams.get('app');
                     const lastAppId = appIdParam || localStorage.getItem(CURRENT_APP_KEY);
                     if (lastAppId) {
                         const app = apps.find(a => a.id === lastAppId);
