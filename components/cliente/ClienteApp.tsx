@@ -52,10 +52,24 @@ const DishItem: React.FC<DishItemProps> = ({
         return p.Alergenos;
     }, [p.Alergenos, selectedAllergens]);
 
-    const isRestricted = useMemo(() => {
+    const isAllergenRestricted = useMemo(() => {
         if (selectedAllergens.length === 0) return false;
         return p.Alergenos?.some(a => selectedAllergens.includes(a));
     }, [p.Alergenos, selectedAllergens]);
+
+    const isDescartadoDia = p.Activo_Dia === false;
+    const isRestricted = isAllergenRestricted || isDescartadoDia;
+
+    const noDisponibleLabel = useMemo(() => {
+        switch (lang) {
+            case 'EU': return 'Agortuta';
+            case 'EN': return 'Sold out';
+            case 'FR': return 'Épuisé';
+            case 'DE': return 'Ausverkauft';
+            case 'IT': return 'Esaurito';
+            default: return 'Agotado';
+        }
+    }, [lang]);
 
     const name = (p as any)[`${lang}_Nombre`] || p.ES_Nombre;
     const hasAllergens = allergensToDisplay.length > 0;
@@ -66,11 +80,16 @@ const DishItem: React.FC<DishItemProps> = ({
                 <div className={`flex-grow min-w-0 transition-opacity duration-300 ${isRestricted ? 'opacity-40' : ''}`}>
                     <span className={`text-[13px] sm:text-base font-medium truncate block ${isRestricted ? (isKanala ? 'text-white/40 line-through decoration-white/40' : 'text-slate-500 line-through decoration-slate-400') : (isKanala ? 'text-white' : 'text-slate-800')}`}>
                         {name}
+                        {isDescartadoDia && (
+                            <span className="ml-2 text-[10px] sm:text-xs font-normal italic no-underline opacity-90 inline-block tracking-normal">
+                                ({noDisponibleLabel})
+                            </span>
+                        )}
                     </span>
                 </div>
 
                 <div className="flex flex-row items-center gap-2.5 flex-shrink-0 ml-auto">
-                    {(showAllergens || isRestricted) && hasAllergens && (
+                    {(showAllergens || isAllergenRestricted) && hasAllergens && (
                         <div className="flex flex-row items-center gap-1.5 sm:gap-2">
                             {allergensToDisplay.map((a: any) => (
                                 <div 
@@ -120,7 +139,8 @@ const ClienteApp: React.FC = () => {
     }, [view]);
 
     const t = translations[lang];
-    const activePlatos = useMemo(() => platos.filter(p => p.Activo_Dia), [platos]);
+    // Los platos descartados o no activos se mantienen visibles pero atenuados en gris como en los alérgenos
+    const activePlatos = useMemo(() => platos, [platos]);
     
     const filteredPlatos = useMemo(() => {
         // No filtramos, mostramos todo. El filtrado visual se hace en DishItem.

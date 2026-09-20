@@ -24,10 +24,11 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
     const hashParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.hash.replace(/^#\/?\??/, '')) : new URLSearchParams();
     
-    const isClientUrl = searchParams.get('client') === 'true' || hashParams.get('client') === 'true';
-    const isOwnerUrl = searchParams.get('admin') === 'true' || hashParams.get('admin') === 'true';
+    const isExplicitMaster = searchParams.get('master') === 'true' || hashParams.get('master') === 'true';
+    const isClientUrl = !isExplicitMaster && (searchParams.get('client') === 'true' || hashParams.get('client') === 'true');
+    const isOwnerUrl = !isExplicitMaster && (searchParams.get('admin') === 'true' || hashParams.get('admin') === 'true');
 
-    const isMasterAdmin = !isClientUrl && !isOwnerUrl;
+    const isMasterAdmin = isExplicitMaster || (!isClientUrl && !isOwnerUrl);
     const [isInitializing, setIsInitializing] = useState(true);
 
     const [config, setConfigState] = useState<RestaurantConfig>(() => {
