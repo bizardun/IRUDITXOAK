@@ -22,3 +22,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+*.backup.*
+
+# Local migration & patch scripts
+*.cjs
+*.py
+*.js
+!vite.config.ts
+*.jfif
+dump*.json
+bun.lock
+restore_menu_dia.ts

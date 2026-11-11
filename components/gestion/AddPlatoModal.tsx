@@ -16,19 +16,20 @@ interface AddPlatoModalProps {
 
 const ALLERGEN_LIST: { id: Alergeno; label: string }[] = [
     { id: 'GLUTEN', label: 'Gluten' },
-    { id: 'LACTEOS', label: 'Lácteos' },
+    { id: 'CRUSTACEOS', label: 'Crustáceos' },
     { id: 'HUEVOS', label: 'Huevos' },
     { id: 'PESCADO', label: 'Pescado' },
-    { id: 'MARISCO', label: 'Marisco' },
-    { id: 'CRUSTACEOS', label: 'Crustáceos' },
-    { id: 'MOLUSCOS', label: 'Moluscos' },
-    { id: 'SOJA', label: 'Soja' },
     { id: 'CACAHUETES', label: 'Cacahuetes' },
+    { id: 'SOJA', label: 'Soja' },
+    { id: 'LACTEOS', label: 'Lácteos' },
+    { id: 'FRUTOS_CASCARA', label: 'Frutos de cáscara' },
+    { id: 'APIO', label: 'Apio' },
     { id: 'MOSTAZA', label: 'Mostaza' },
     { id: 'SESAMO', label: 'Sésamo' },
     { id: 'SULFITOS', label: 'Sulfitos' },
-    { id: 'APIO', label: 'Apio' },
     { id: 'ALTRAMUCES', label: 'Altramuces' },
+    { id: 'MOLUSCOS', label: 'Moluscos' },
+    { id: 'MARISCO', label: 'Marisco' },
     { id: 'CALAMARES', label: 'Calamares' },
 ];
 
@@ -75,7 +76,7 @@ export default function AddPlatoModal({ isOpen, onClose, mode, refreshData, plat
         if (!data.ES_Nombre) return;
         setLoading(true);
         try {
-            const result = await api.analyzeDish(data.ES_Nombre);
+            const result = await api.analyzeDish(data.ES_Nombre, data.Descripcion);
             setTranslationsData(prev => ({ ...prev, ...result.translations }));
             if (result.allergens?.length > 0) {
                 setSelectedAllergens(prev => Array.from(new Set([...prev, ...result.allergens])));

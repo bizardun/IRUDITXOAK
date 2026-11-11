@@ -28,7 +28,7 @@ export const translations: Translations = {
         tipos: { ENTRANTE: "Entrantes", ENSALADA: "Ensaladas", ARROZ: "Arroces", MARISCO: "Mariscos", PESCADO: "Pescados", CARNE: "Carnes", POSTRE: "Postres", PRODUCTO: "Producto", "PARA PICAR": "Para Picar", "DEL MAR": "Del Mar", "DE LA TIERRA": "De la Tierra", ARROCES: "Arroces", HAMBURGUESAS: "Hamburguesas", PIZZAS: "Pizzas", CARNES: "Carnes", PESCADOS: "Pescados", POSTRES: "Postres", "BRASA JOSPER": "Brasa Josper", GUARNICIONES: "Guarniciones", OTROS: "Otros" },
         alergenos: {
             GLUTEN: "Gluten", CRUSTACEOS: "Crustáceos", HUEVOS: "Huevos", PESCADO: "Pescado", 
-            CACAHUETES: "Cacahuetes", SOJA: "Soja", LACTEOS: "Lácteos", 
+            CACAHUETES: "Cacahuetes", SOJA: "Soja", LACTEOS: "Lácteos", FRUTOS_CASCARA: "Frutos de cáscara",
             APIO: "Apio", MOSTAZA: "Mostaza", SESAMO: "Sésamo", SULFITOS: "Sulfitos", 
             ALTRAMUCES: "Altramuces", MOLUSCOS: "Moluscos", CALAMARES: "Calamares", MARISCO: "Marisco"
         },
@@ -64,9 +64,9 @@ export const translations: Translations = {
         tipos: { ENTRANTE: "Hasierakoak", ENSALADA: "Entsaladak", ARROZ: "Arrozak", MARISCO: "Itsaskiak", PESCADO: "Arrainak", CARNE: "Haragiak", POSTRE: "Postreak", PRODUCTO: "Produktua", "PARA PICAR": "Pikatzeko", "DEL MAR": "Itsasokoak", "DE LA TIERRA": "Lurrekoak", ARROCES: "Arrozak", HAMBURGUESAS: "Hanburgesak", PIZZAS: "Pizzak", CARNES: "Okelak", PESCADOS: "Arrainak", POSTRES: "Azkenburukoak", "BRASA JOSPER": "Josper Txingarra", GUARNICIONES: "Hornigaiak", OTROS: "Beste batzuk" },
         alergenos: {
             GLUTEN: "Glutena", CRUSTACEOS: "Krustazeoak", HUEVOS: "Arrautzak", PESCADO: "Arraina", 
-            CACAHUETES: "Kakahueteak", SOJA: "Soja", LACTEOS: "Esnekiak", 
+            CACAHUETES: "Kakahueteak", SOJA: "Soja", LACTEOS: "Esnekiak", FRUTOS_CASCARA: "Oskoldun fruituak",
             APIO: "Apioa", MOSTAZA: "Ziapea", SESAMO: "Sesamoa", SULFITOS: "Sulfitoak", 
-            ALTRAMUCES: "Altramuzak", MOLUSCOS: "Moluskuak", MARISCO: "Itsaskia"
+            ALTRAMUCES: "Altramuzak", MOLUSCOS: "Moluskuak", MARISCO: "Itsaskia", CALAMARES: "Txipiroiak"
         }
     },
     EN: {
@@ -85,9 +85,9 @@ export const translations: Translations = {
         tipos: { ENTRANTE: "Starters", ENSALADA: "Salads", ARROZ: "Rice", MARISCO: "Seafood", PESCADO: "Fish", CARNE: "Meats", POSTRE: "Desserts", PRODUCTO: "Snacks", "PARA PICAR": "To Share", "DEL MAR": "From the sea", "DE LA TIERRA": "From the land", ARROCES: "Rice dishes", HAMBURGUESAS: "Hamburgers", PIZZAS: "Pizzas", CARNES: "Meat", PESCADOS: "Fish", POSTRES: "Desserts", "BRASA JOSPER": "Josper Charcoal Grill", GUARNICIONES: "Sides", OTROS: "Others" },
         alergenos: {
             GLUTEN: "Gluten", CRUSTACEOS: "Crustaceans", HUEVOS: "Eggs", PESCADO: "Fish", 
-            CACAHUETES: "Peanuts", SOJA: "Soy", LACTEOS: "Dairy", 
+            CACAHUETES: "Peanuts", SOJA: "Soy", LACTEOS: "Dairy", FRUTOS_CASCARA: "Nuts",
             APIO: "Celery", MOSTAZA: "Mustard", SESAMO: "Sesame", SULFITOS: "Sulphites", 
-            ALTRAMUCES: "Lupins", MOLUSCOS: "Molluscs", MARISCO: "Seafood"
+            ALTRAMUCES: "Lupins", MOLUSCOS: "Molluscs", MARISCO: "Seafood", CALAMARES: "Squid"
         }
     },
     FR: {
@@ -106,9 +106,9 @@ export const translations: Translations = {
         tipos: { ENTRANTE: "Entrées", ENSALADA: "Salades", ARROZ: "Riz", MARISCO: "Fruits de mer", PESCADO: "Poissons", CARNE: "Viandes", POSTRE: "Desserts", PRODUCTO: "À grignoter", "PARA PICAR": "Pour picorer", "DEL MAR": "De la mer", "DE LA TIERRA": "De la terre", ARROCES: "Plats de riz", HAMBURGUESAS: "Hamburgers", PIZZAS: "Pizzas", CARNES: "Viandes", PESCADOS: "Poissons", POSTRES: "Desserts", "BRASA JOSPER": "Grillade Josper", GUARNICIONES: "Accompagnements", OTROS: "Autres" },
         alergenos: {
             GLUTEN: "Gluten", CRUSTACEOS: "Crustacés", HUEVOS: "Œufs", PESCADO: "Poisson", 
-            CACAHUETES: "Arachides", SOJA: "Soja", LACTEOS: "Produits laitiers", 
+            CACAHUETES: "Arachides", SOJA: "Soja", LACTEOS: "Produits laitiers", FRUTOS_CASCARA: "Fruits à coque",
             APIO: "Céleri", MOSTAZA: "Moutarde", SESAMO: "Sésame", SULFITOS: "Sulfites", 
-            ALTRAMUCES: "Lupins", MOLUSCOS: "Mollusques", MARISCO: "Fruits de mer"
+            ALTRAMUCES: "Lupins", MOLUSCOS: "Mollusques", MARISCO: "Fruits de mer", CALAMARES: "Calmars"
         }
     },
     DE: {
@@ -127,9 +127,9 @@ export const translations: Translations = {
         tipos: { ENTRANTE: "Vorspeisen", ENSALADA: "Salate", ARROZ: "Reis", MARISCO: "Meeresfrüchte", PESCADO: "Fisch", CARNE: "Fleisch", POSTRE: "Desserts", PRODUCTO: "Produkt", "PARA PICAR": "Für den kleinen Hunger", "DEL MAR": "Aus dem Meer", "DE LA TIERRA": "Vom Land", ARROCES: "Reisgerichte", HAMBURGUESAS: "Hamburger", PIZZAS: "Pizzas", CARNES: "Fleisch", PESCADOS: "Fisch", POSTRES: "Desserts", "BRASA JOSPER": "Josper Holzkohlegrill", GUARNICIONES: "Beilagen", OTROS: "Andere" },
         alergenos: {
             GLUTEN: "Gluten", CRUSTACEOS: "Krebstiere", HUEVOS: "Eier", PESCADO: "Fisch", 
-            CACAHUETES: "Erdnüsse", SOJA: "Soja", LACTEOS: "Milchprodukte", 
+            CACAHUETES: "Erdnüsse", SOJA: "Soja", LACTEOS: "Milchprodukte", FRUTOS_CASCARA: "Schalenfrüchte",
             APIO: "Sellerie", MOSTAZA: "Senf", SESAMO: "Sesam", SULFITOS: "Sulfite", 
-            ALTRAMUCES: "Lupinen", MOLUSCOS: "Weichtiere", MARISCO: "Meeresfrüchte"
+            ALTRAMUCES: "Lupinen", MOLUSCOS: "Weichtiere", MARISCO: "Meeresfrüchte", CALAMARES: "Tintenfisch"
         }
     },
     IT: {
@@ -148,9 +148,9 @@ export const translations: Translations = {
         tipos: { ENTRANTE: "Antipasti", ENSALADA: "Insalate", ARROZ: "Riso", MARISCO: "Frutti di mare", PESCADO: "Pesce", CARNE: "Carne", POSTRE: "Dolci", PRODUCTO: "Prodotto", "PARA PICAR": "Stuzzichini", "DEL MAR": "Dal mare", "DE LA TIERRA": "Dalla terra", ARROCES: "Piatti di riso", HAMBURGUESAS: "Hamburger", PIZZAS: "Pizze", CARNES: "Carne", PESCADOS: "Pesce", POSTRES: "Dolci", "BRASA JOSPER": "Griglia Josper", GUARNICIONES: "Contorni", OTROS: "Altro" },
         alergenos: {
             GLUTEN: "Glutine", CRUSTACEOS: "Crostacei", HUEVOS: "Uova", PESCADO: "Pesce", 
-            CACAHUETES: "Arachidi", SOJA: "Soia", LACTEOS: "Latticini", 
+            CACAHUETES: "Arachidi", SOJA: "Soia", LACTEOS: "Latticini", FRUTOS_CASCARA: "Frutta a guscio",
             APIO: "Sedano", MOSTAZA: "Senape", SESAMO: "Sesamo", SULFITOS: "Solfiti", 
-            ALTRAMUCES: "Lupini", MOLUSCOS: "Molluschi", MARISCO: "Frutti di mare"
+            ALTRAMUCES: "Lupini", MOLUSCOS: "Molluschi", MARISCO: "Frutti di mare", CALAMARES: "Calamari"
         }
     }
 };

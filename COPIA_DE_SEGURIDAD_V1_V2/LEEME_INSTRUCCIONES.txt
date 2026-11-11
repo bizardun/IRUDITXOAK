@@ -1,0 +1,27 @@
+INSTRUCCIONES PARA DESCARGAR Y USAR LA COPIA DE SEGURIDAD
+===========================================================
+
+1. ¿DÓNDE ESTÁ MI COPIA DE SEGURIDAD?
+   - En tu carpeta de proyecto: /COPIA_DE_SEGURIDAD_V1_V2/
+   - Descarga directa web: /copia_seguridad/copia_completa_v1_v2.zip
+   - Descarga directa web (tar.gz): /copia_seguridad/copia_completa_v1_v2.tar.gz
+
+2. ¿QUÉ CONTIENE?
+   - Todo el código fuente de la app cliente y del panel de gestión.
+   - El diccionario oficial de Kanala Beach (src/data/kanala_dictionary.json).
+   - Los 14 alérgenos oficiales según el Reglamento UE 1169/2011 con colores y traducciones en 6 idiomas.
+   - Toda la lógica de atenuación de platos descartados (en gris).
+   - El selector de idiomas con borde metálico para temas oscuros.
+   - El sistema de reordenación táctil con botones Subir/Bajar.
+   - La frase reglamentaria de los carteles QR.
+   - La configuración de conexión con Firebase Firestore en tiempo real.
+
+3. ¿CÓMO PONERLA EN MARCHA EN TU NUEVO ORDENADOR?
+   - Descomprime 'copia_completa_v1_v2.zip'
+   - Abre un terminal en la carpeta descomprimida
+   - Ejecuta:
+       npm install
+       npm run dev
+   - Abre tu navegador en http://localhost:3000
+   
+¡Todos los datos de tus restaurantes seguirán conectados a la base de datos Firestore en la nube!

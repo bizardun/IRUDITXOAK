@@ -54,6 +54,7 @@ export default function FactoryDashboard() {
 
     // Estado para Descargar ZIP
     const [isZipping, setIsZipping] = useState(false);
+    const [showBackupModal, setShowBackupModal] = useState(false);
 
     // Style State
     const [font, setFont] = useState<ThemeConfig['font']>('font-lora');
@@ -315,6 +316,87 @@ export default function FactoryDashboard() {
                 </div>
             )}
 
+            {/* Modal de Copia de Seguridad */}
+            {showBackupModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-slate-800 border border-emerald-500/40 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden relative p-6">
+                        <button onClick={() => setShowBackupModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                        
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-12 h-12 bg-emerald-900/50 border border-emerald-500/50 rounded-xl flex items-center justify-center text-emerald-400">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-white">Copia de Seguridad (V1 & V2)</h3>
+                                <p className="text-xs text-emerald-400">Todo tu proyecto guardado y disponible para descargar</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-4 mb-5 text-xs text-slate-300 space-y-2">
+                            <p className="font-semibold text-slate-100 flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                Tus datos están 100% a salvo en la nube:
+                            </p>
+                            <ul className="list-disc list-inside space-y-1 text-slate-400 pl-1">
+                                <li>Versión 1 y Versión 2 completas con todo el código fuente.</li>
+                                <li>Los 14 alérgenos oficiales UE con colores y traducciones en 6 idiomas.</li>
+                                <li>Reglas de traducción (Diccionario Kanala, Web Oficial, Elhuyar Euskera).</li>
+                                <li>Atenuación en gris de platos descartados por alérgenos en el cliente.</li>
+                                <li>Base de datos Firebase Firestore sincronizada en tiempo real.</li>
+                            </ul>
+                        </div>
+
+                        <div className="space-y-3">
+                            <a 
+                                href="/copia_seguridad/copia_completa_v1_v2.zip" 
+                                download="copia_completa_v1_v2.zip"
+                                className="w-full flex items-center justify-between p-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-emerald-500/20 group"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <IconDownload />
+                                    <div className="text-left">
+                                        <div className="text-sm">Descargar Proyecto Completo (.ZIP)</div>
+                                        <div className="text-[11px] text-emerald-200 font-normal">Recomendado para Windows, Mac y Linux (3.2 MB)</div>
+                                    </div>
+                                </div>
+                                <span className="text-xs bg-emerald-700 px-2 py-1 rounded group-hover:bg-emerald-600">.zip</span>
+                            </a>
+
+                            <a 
+                                href="/copia_seguridad/copia_completa_v1_v2.tar.gz" 
+                                download="copia_completa_v1_v2.tar.gz"
+                                className="w-full flex items-center justify-between p-3.5 bg-slate-700 hover:bg-slate-600 text-slate-100 rounded-xl font-bold transition-all border border-slate-600 group"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <IconDownload />
+                                    <div className="text-left">
+                                        <div className="text-sm">Descargar Formato Comprimido (.TAR.GZ)</div>
+                                        <div className="text-[11px] text-slate-400 font-normal">Ideal para servidores y Linux</div>
+                                    </div>
+                                </div>
+                                <span className="text-xs bg-slate-800 px-2 py-1 rounded">.tar.gz</span>
+                            </a>
+
+                            <a 
+                                href="/copia_seguridad/MANUAL_Y_REGLAS_COMPLETAS_V1_V2.md" 
+                                target="_blank"
+                                rel="noreferrer"
+                                className="w-full flex items-center justify-between p-3 bg-slate-900 hover:bg-slate-800 text-cyan-400 rounded-xl text-xs font-semibold transition-all border border-cyan-900/50"
+                            >
+                                <span>📄 Ver Manual y Reglas de Alérgenos e Idiomas</span>
+                                <span>↗</span>
+                            </a>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-slate-700/60 text-center">
+                            <span className="text-[11px] text-slate-500">También guardado localmente en la carpeta <code className="text-slate-400 bg-slate-900 px-1 py-0.5 rounded">/COPIA_DE_SEGURIDAD_V1_V2/</code></span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-6xl mx-auto">
                 <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 border-b border-slate-700 pb-4 gap-4">
                     <div>
@@ -322,9 +404,12 @@ export default function FactoryDashboard() {
                         <p className="text-slate-400 text-sm">Plataforma de Gestión y Creación</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <a href="/proyecto_completo.zip" download="proyecto_completo.zip" className="text-emerald-400 hover:text-white transition-colors text-xs font-bold flex items-center gap-2 border border-emerald-700/50 px-3 py-1.5 rounded-full hover:bg-emerald-900/30">
-                            <IconDownload /> Descargar Proyecto Completo
-                        </a>
+                        <button 
+                            onClick={() => setShowBackupModal(true)} 
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white transition-colors text-xs font-bold flex items-center gap-2 border border-emerald-400 px-4 py-2 rounded-full shadow-lg shadow-emerald-900/40"
+                        >
+                            <IconDownload /> 💾 Copia de Seguridad (V1 & V2)
+                        </button>
                         <button onClick={exitFactory} className="text-slate-400 hover:text-white transition-colors text-xs font-bold flex items-center gap-2 border border-slate-700 px-3 py-1.5 rounded-full hover:bg-slate-800">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18-6-6 6-6"/></svg> Volver al Restaurante Activo
                         </button>

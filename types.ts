@@ -5,7 +5,7 @@ export type RolMenu = "PRIMERO" | "SEGUNDO" | "POSTRE" | "RACION" | null;
 export type TipoPlato = "ENTRANTE" | "ENSALADA" | "ARROZ" | "MARISCO" | "PESCADO" | "CARNE" | "POSTRE";
 export type TipoPlatoInput = TipoPlato | "PRIMERO" | "SEGUNDO";
 
-export type Alergeno = "GLUTEN" | "CRUSTACEOS" | "HUEVOS" | "PESCADO" | "CACAHUETES" | "SOJA" | "LACTEOS" | "APIO" | "MOSTAZA" | "SESAMO" | "SULFITOS" | "ALTRAMUCES" | "MOLUSCOS" | "CALAMARES" | "MARISCO";
+export type Alergeno = "GLUTEN" | "CRUSTACEOS" | "HUEVOS" | "PESCADO" | "CACAHUETES" | "SOJA" | "LACTEOS" | "FRUTOS_CASCARA" | "APIO" | "MOSTAZA" | "SESAMO" | "SULFITOS" | "ALTRAMUCES" | "MOLUSCOS" | "CALAMARES" | "MARISCO";
 
 export interface Plato {
     ID_Plato: number;

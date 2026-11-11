@@ -13,12 +13,15 @@ const allergenColors: Record<string, string> = {
     CACAHUETES: "bg-orange-700",      
     SOJA: "bg-green-600",             
     LACTEOS: "bg-sky-300",            
+    FRUTOS_CASCARA: "bg-amber-700",
     APIO: "bg-lime-500",              
     MOSTAZA: "bg-yellow-600",         
     SESAMO: "bg-stone-400",           
     SULFITOS: "bg-purple-500",        
     ALTRAMUCES: "bg-yellow-200",      
-    MOLUSCOS: "bg-teal-600"           
+    MOLUSCOS: "bg-teal-600",
+    CALAMARES: "bg-teal-500",
+    MARISCO: "bg-rose-500"
 };
 
 interface DishItemProps {

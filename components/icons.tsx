@@ -27,6 +27,7 @@ export const AllergenIcon: React.FC<{ type: Alergeno; className?: string }> = ({
         CACAHUETES: <path d="M7 11c0-3 2-5 5-5s5 2 5 5c0 1.5-.5 3-2 3-1.5 0-3 .5-3 2 0-1.5-1.5-2-3-2-1.5 0-2-1.5-2-3Z" />, // Cacahuete forma 8
         SOJA: <path d="M7 16a4 4 0 1 0 8 0 4 4 0 1 0-8 0Zm0-10a3 3 0 1 0 6 0 3 3 0 1 0-6 0Z" />, // Habas
         LACTEOS: <path d="M7 6h10v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V6Zm3-4h4v4h-4V2Z" />, // Botella leche
+        FRUTOS_CASCARA: <path d="M12 2C8.5 2 6 5.5 6 9.5c0 4.5 6 12.5 6 12.5s6-8 6-12.5C18 5.5 15.5 2 12 2Zm0 9a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z" />, // Nuez / Bellota
         APIO: <path d="M12 2v20M7 6l5 4 5-4M7 14l5 4 5-4" strokeLinecap="round" />, // Rama
         MOSTAZA: <path d="M7 6h10v10H7zM12 2v4M12 16v4" />, // Bote
         SESAMO: <circle cx="12" cy="12" r="2" />, // Semilla (varias)

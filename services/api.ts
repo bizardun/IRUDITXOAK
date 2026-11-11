@@ -62,7 +62,7 @@ export const translateText = async (text: string, targetLang: string, targetLang
         Respond ONLY with the translated text.`;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-3.6-flash',
+            model: 'gemini-3.8-flash',
             contents: `Translate "${text}" to ${targetLangName}.`,
             config: { 
                 systemInstruction: systemPrompt,
@@ -80,27 +80,30 @@ export const translateText = async (text: string, targetLang: string, targetLang
     }
 };
 
-export const analyzeDish = async (dishName: string): Promise<{ translations: Record<string, string>, allergens: Alergeno[], sources: any[] }> => {
+export const analyzeDish = async (dishName: string, dishDescription?: string): Promise<{ translations: Record<string, string>, allergens: Alergeno[], sources: any[] }> => {
     if (!dishName || !apiKey) return { translations: {}, allergens: [], sources: [] };
     
+    // Lista oficial de los 14 alérgenos de obligada declaración en la UE (Reglamento 1169/2011) + retrocompatibilidad
     const allergenList = [
-        "GLUTEN", "LACTEOS", "HUEVOS", "PESCADO", "MARISCO", "CRUSTACEOS", "MOLUSCOS", 
-        "SOJA", "CACAHUETES", "MOSTAZA", "SESAMO", "SULFITOS", "APIO", "ALTRAMUCES", "CALAMARES"
+        "GLUTEN", "CRUSTACEOS", "HUEVOS", "PESCADO", "CACAHUETES", "SOJA", "LACTEOS", 
+        "FRUTOS_CASCARA", "APIO", "MOSTAZA", "SESAMO", "SULFITOS", "ALTRAMUCES", "MOLUSCOS", 
+        "CALAMARES", "MARISCO"
     ];
 
     const currentConfig = getActiveConfig();
     let websiteSearchRule = "";
     if (currentConfig.officialWebsite) {
-        let baseUrl = currentConfig.officialWebsite;
+        let baseUrl = currentConfig.officialWebsite.trim();
         if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
         
         let exactMatchStr = "";
+        // Consulta prioritaria de base de conocimiento local para Kanala o cualquier app configurada
         if (baseUrl.includes('kanalabeach')) {
             const normalizedDishName = dishName.trim().toLowerCase();
             const match = kanalaDictionary.find((d: any) => d.plato_es.toLowerCase() === normalizedDishName);
             if (match) {
                 exactMatchStr = `
-        WE FOUND THE OFFICIAL TRANSLATIONS IN THE KNOWLEDGE BASE FOR THIS EXACT DISH. YOU MUST USE THESE EXACT STRINGS WITHOUT INVENTING ANYTHING NEW:
+        WE FOUND THE OFFICIAL RESTAURANT TRANSLATIONS IN THE LOCAL KNOWLEDGE BASE FOR THIS EXACT DISH. YOU MUST USE THESE EXACT STRINGS WITHOUT INVENTING ANYTHING NEW:
         - Basque (EU): "${match.plato_eu}"
         - English (EN): "${match.plato_en}"
         - French (FR): "${match.plato_fr}"
@@ -109,48 +112,55 @@ export const analyzeDish = async (dishName: string): Promise<{ translations: Rec
             }
         }
 
-        websiteSearchRule = `2. CRITICAL - DO NOT INVENT TRANSLATIONS: The restaurant has an official website at ${baseUrl}. ${exactMatchStr ? exactMatchStr : `You MUST use Google Search to find the exact translations they already use on their multilingual pages.
-        - For Basque (EU), check: ${baseUrl}/eu/
-        - For English (EN), check: ${baseUrl}/en/
-        - For French (FR), check: ${baseUrl}/fr/
-        If you find the dish on those pages, you MUST return EXACTLY what is written there without changing a single letter. Only generate a new translation if the dish is completely absent from the website.`}`;
+        websiteSearchRule = `2. CRITICAL - DO NOT INVENT TRANSLATIONS: The active restaurant (${currentConfig.name}) has an official website at ${baseUrl}. ${exactMatchStr ? exactMatchStr : `You MUST use Google Search to inspect the official website (${baseUrl}) and identify whether this dish or equivalent appears on their multilingual pages.
+        - For Basque (EU), check: ${baseUrl}/eu/ or Basque menu sections
+        - For English (EN), check: ${baseUrl}/en/ or English menu sections
+        - For French (FR), check: ${baseUrl}/fr/ or French menu sections
+        If found on the official website, you MUST return EXACTLY what is written there without changing a single letter. Only generate a translation if the dish is absent from the official website.`}`;
     } else {
-        websiteSearchRule = "2. (No official website configured for this restaurant, generate standard translations).";
+        websiteSearchRule = `2. (No official website configured for restaurant "${currentConfig.name}", generate standard authentic culinary translations).`;
     }
 
+    const dishContext = dishDescription ? `Dish Name: "${dishName}". Description / Ingredients: "${dishDescription}"` : `Dish Name: "${dishName}"`;
+
     const systemPrompt = `
-        You are an expert culinary AI and food safety inspector.
-        Analyze the Spanish Dish Name provided.
+        You are an expert culinary AI, certified food safety inspector, and multilingual gastronomic translator.
+        Analyze the Spanish Dish Name and optional Ingredients/Description provided.
         
         CRITICAL TRANSLATION RULES:
-        1. Translate the dish name to: EU, EN, FR, DE, IT.
+        1. Translate the dish name to: EU (Basque), EN (English), FR (French), DE (German), IT (Italian).
         ${websiteSearchRule}
-        3. For EU (Basque), if it's a new translation not on the website, you MUST use Google Search to cross-reference with https://www.euskadi.eus/diccionario-elhuyar/.
+        3. For EU (Basque), if it's not already on the restaurant's official website or knowledge base, you MUST strictly search and cross-reference with the Elhuyar Hiztegia (https://www.euskadi.eus/diccionario-elhuyar/) using Google Search to ensure authentic, grammatically correct Euskera.
+        4. For EN, FR, DE, IT: Generate natural, enticing, professional restaurant menu names (avoid clumsy literal machine translations).
 
-        4. Detect ALL allergens present in the standard recipe for this dish from the following list ONLY: ${allergenList.join(', ')}.
+        CRITICAL EU ALLERGEN RULES (Regulation EU 1169/2011):
+        Detect ALL allergens present in the standard culinary recipe and the stated ingredients from this list ONLY: ${allergenList.join(', ')}.
         
-        CRITICAL ALLERGEN RULES:
-        - If the dish name explicitly contains a word related to an allergen (e.g., "marisco", "queso", "huevo", "pescado", "calamar"), you MUST ALWAYS include that specific allergen (e.g., "MARISCO", "LACTEOS", "HUEVOS", "PESCADO", "CALAMARES").
-        - Think deeply about the typical ingredients used to prepare this dish, including sauces, marinades, and garnishes.
-        - "Mayonesa" (Mayonnaise) contains HUEVOS.
-        - "Salsa de soja" (Soy sauce) contains SOJA and GLUTEN.
-        - "Queso", "Nata", "Mantequilla" (Cheese, Cream, Butter) contain LACTEOS.
-        - "Pan", "Rebozado", "Empanado", "Harina", "Galleta" (Bread, Battered, Breaded, Flour, Cookie) contain GLUTEN.
-        - "Vino", "Vinagre" (Wine, Vinegar) often contain SULFITOS.
-        - "Marisco" includes shrimp, prawns, crab, lobster (CRUSTACEOS) and clams, mussels, octopus, squid (MOLUSCOS/CALAMARES). If the dish is called "de marisco" or "con marisco", ALWAYS include the "MARISCO" allergen, and optionally add CRUSTACEOS/MOLUSCOS if you know the specific ingredients.
-        - "Pasta" contains GLUTEN and often HUEVOS.
-        - "Croquetas" contain GLUTEN, LACTEOS, and often HUEVOS.
-        - "Tortilla" contains HUEVOS.
-        - "Pesto" contains LACTEOS.
-        - "Chocolate" often contains LACTEOS and SOJA.
-        
+        Detailed allergen detection guidelines:
+        - GLUTEN: Wheat, barley, rye, oats, flour, batter ("rebozado", "empanado", "tempura"), bread, dough ("masa"), pasta, pizza, puff pastry ("hojaldre"), croutons, croustades, soy sauce ("salsa de soja"), roux, bechamel, beer.
+        - CRUSTACEOS: Shrimps, prawns ("gambas", "langostinos"), lobster ("bogavante", "langosta"), crab ("buey de mar", "centollo", "nécora", "txangurro"), crayfish ("cigalas").
+        - HUEVOS: Whole eggs, egg whites, yolks, mayonnaise ("mayonesa", "mahonesa"), aioli ("alioli"), tortillas, revueltos, omelettes, batters, fresh egg pasta, meringue, custard ("flan", "natillas"), pastries.
+        - PESCADO: Any finfish (merluza, bacalao, atún, bonito, anchoas, salmón, lubina, rodaballo, etc.), fish fumet/broth, fish roe ("huevas"), anchovy dressing, worcestershire sauce.
+        - CACAHUETES: Peanuts, peanut oil, satay sauce, peanut butter.
+        - SOJA: Soy sauce ("soja"), edamame, tofu, miso, tamari, teriyaki sauce, soy lecithin.
+        - LACTEOS: Milk, cream ("nata"), butter ("mantequilla"), cheese ("queso", "parmesano", "mozzarella", "idiazabal", "roquefort"), yogurt, bechamel, ice cream, dishes with milk-derived sauces.
+        - FRUTOS_CASCARA: Tree nuts (walnuts "nueces", almonds "almendras", hazelnuts "avellanas", pine nuts "piñones", cashews "anacardos", pistachios "pistachos", pecans, macadamias), pesto sauce (traditional pesto has pine nuts), romesco, praliné.
+        - APIO: Celery, celery salt, meat or vegetable broths/stocks made with celery.
+        - MOSTAZA: Mustard, dijon mustard, mustard dressings, vinaigrettes with mustard.
+        - SESAMO: Sesame seeds, tahini, burger buns with sesame, oriental dressings.
+        - SULFITOS: Wine (red, white, sparkling) in reductions or sauces ("al vino", "al cava", "al txakoli"), vinegar, cider ("sidra"), dried fruits, sausages/cured meats with sulfites.
+        - ALTRAMUCES: Lupin beans, lupin flour.
+        - MOLUSCOS: Squid ("calamar", "chipirón", "rabas"), octopus ("pulpo"), cuttlefish ("sepia", "txoco"), clams ("almejas"), mussels ("mejillones"), oysters ("ostras"), cockles ("berberechos"), scallops ("zamburiñas", "vieiras"), snails.
+        - MARISCO: If the dish refers generically to seafood ("marisco", "zarzuela", "paella de marisco"), include MARISCO and the specific ones (CRUSTACEOS/MOLUSCOS).
+        - CALAMARES: If the dish contains squid, chipirón, rabas or sepia, include CALAMARES as well as MOLUSCOS.
+
         Return JSON ONLY.
     `;
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-3.6-flash',
-            contents: `Dish Name: "${dishName}"`,
+            model: 'gemini-3.8-flash',
+            contents: dishContext,
             config: { 
                 systemInstruction: systemPrompt,
                 responseMimeType: "application/json",
@@ -198,6 +208,7 @@ export const generateAppConfig = async (prompt: string, fileData: string | null,
     const systemPrompt = `
         AI Menu Generator.
         For all Basque (EU) translations, ensure they align with Elhuyar standards (https://www.euskadi.eus/diccionario-elhuyar/).
+        For allergens, strictly classify under the 14 EU mandatory allergens (GLUTEN, CRUSTACEOS, HUEVOS, PESCADO, CACAHUETES, SOJA, LACTEOS, FRUTOS_CASCARA, APIO, MOSTAZA, SESAMO, SULFITOS, ALTRAMUCES, MOLUSCOS).
         OUTPUT JSON: { "slogan": "...", "initialPlatos": [...] }
     `;
 
@@ -209,7 +220,7 @@ export const generateAppConfig = async (prompt: string, fileData: string | null,
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-3.6-flash',
+            model: 'gemini-3.8-flash',
             contents: { parts },
             config: { 
                 systemInstruction: systemPrompt,

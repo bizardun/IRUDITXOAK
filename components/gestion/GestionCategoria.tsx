@@ -90,7 +90,7 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                 const chunk = platos.slice(i, i + concurrencyLimit);
                 await Promise.all(chunk.map(async (plato) => {
                     try {
-                        const analysis = await api.analyzeDish(plato.ES_Nombre);
+                        const analysis = await api.analyzeDish(plato.ES_Nombre, plato.Descripcion);
                         const updates: Partial<Plato> = {};
                         if (analysis.allergens) {
                             updates.Alergenos = analysis.allergens;
@@ -407,6 +407,14 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                             <IconQR /> QR
                         </button>
                     )}
+                    <a 
+                        href="/copia_seguridad/copia_completa_v1_v2.zip" 
+                        download="copia_completa_v1_v2.zip" 
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow transition-colors border ${isKanala ? 'bg-neutral-800 text-emerald-400 hover:text-white border-white/20 hover:bg-neutral-700' : 'bg-white text-emerald-600 hover:text-emerald-700 border-slate-200 hover:bg-slate-50'}`}
+                        title="Descargar Copia de Seguridad Completa (ZIP con todo el código y reglas)"
+                    >
+                        💾 Copia
+                    </a>
                     <button onClick={openAddModal} className="flex items-center gap-1 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow hover:bg-emerald-700 transition-colors">
                         <IconPlus /> Añadir
                     </button>
