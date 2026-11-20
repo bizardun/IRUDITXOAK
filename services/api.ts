@@ -62,7 +62,7 @@ export const translateText = async (text: string, targetLang: string, targetLang
         Respond ONLY with the translated text.`;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-3.8-flash',
+            model: 'gemini-4-hydrogen',
             contents: `Translate "${text}" to ${targetLangName}.`,
             config: { 
                 systemInstruction: systemPrompt,
@@ -80,8 +80,8 @@ export const translateText = async (text: string, targetLang: string, targetLang
     }
 };
 
-export const analyzeDish = async (dishName: string, dishDescription?: string): Promise<{ translations: Record<string, string>, allergens: Alergeno[], sources: any[] }> => {
-    if (!dishName || !apiKey) return { translations: {}, allergens: [], sources: [] };
+export const analyzeDish = async (dishName: string, dishDescription?: string): Promise<{ ok: boolean, translations: Record<string, string>, allergens: Alergeno[], sources: any[] }> => {
+    if (!dishName || !apiKey) return { ok: false, translations: {}, allergens: [], sources: [] };
     
     // Lista oficial de los 14 alérgenos de obligada declaración en la UE (Reglamento 1169/2011) + retrocompatibilidad
     const allergenList = [
@@ -159,7 +159,7 @@ export const analyzeDish = async (dishName: string, dishDescription?: string): P
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-3.8-flash',
+            model: 'gemini-4-hydrogen',
             contents: dishContext,
             config: { 
                 systemInstruction: systemPrompt,
@@ -192,13 +192,14 @@ export const analyzeDish = async (dishName: string, dishDescription?: string): P
         
         const result = JSON.parse(text);
         return {
+            ok: true,
             translations: result.translations || {},
-            allergens: result.allergens || [],
+            allergens: Array.isArray(result.allergens) ? result.allergens : [],
             sources: extractSources(response)
         };
     } catch (error) {
         console.error("Error analyzing dish:", error);
-        return { translations: {}, allergens: [], sources: [] };
+        return { ok: false, translations: {}, allergens: [], sources: [] };
     }
 };
 
@@ -220,7 +221,7 @@ export const generateAppConfig = async (prompt: string, fileData: string | null,
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-3.8-flash',
+            model: 'gemini-4-hydrogen',
             contents: { parts },
             config: { 
                 systemInstruction: systemPrompt,

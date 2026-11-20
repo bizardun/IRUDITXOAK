@@ -86,6 +86,36 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             } finally { setIsInitializing(false); }
         };
         loadRegistry();
+
+        const handleHashChange = () => {
+            const sp = new URLSearchParams(window.location.search);
+            const hp = new URLSearchParams(window.location.hash.replace(/^#\/?\??/, ''));
+            const explicitMaster = sp.get('master') === 'true' || hp.get('master') === 'true';
+            const clientUrl = !explicitMaster && (sp.get('client') === 'true' || hp.get('client') === 'true');
+            const ownerUrl = !explicitMaster && (sp.get('admin') === 'true' || hp.get('admin') === 'true');
+            const master = explicitMaster || (!clientUrl && !ownerUrl);
+
+            setShowMasterPanelButton(master);
+            if (master) {
+                setIsFactoryMode(true);
+            } else {
+                const targetAppId = sp.get('app') || hp.get('app');
+                setAvailableApps(currentApps => {
+                    if (targetAppId) {
+                        const found = currentApps.find(a => a.id === targetAppId);
+                        if (found) {
+                            api.setApiAppId(found.id);
+                            setConfigState(found);
+                        }
+                    }
+                    return currentApps;
+                });
+                setIsFactoryMode(false);
+            }
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
     }, [isMasterAdmin]);
 
     const loadApp = (id: string) => {

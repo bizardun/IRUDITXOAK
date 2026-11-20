@@ -21,6 +21,7 @@ import type { Plato, TipoPlato } from '../../types';
 const allergenColors: Record<string, string> = {
     GLUTEN: "bg-amber-950",           
     LACTEOS: "bg-sky-300",            
+    FRUTOS_CASCARA: "bg-amber-700",
     HUEVOS: "bg-yellow-300",          
     PESCADO: "bg-blue-600",           
     MARISCO: "bg-fuchsia-500",          
@@ -91,13 +92,20 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                 await Promise.all(chunk.map(async (plato) => {
                     try {
                         const analysis = await api.analyzeDish(plato.ES_Nombre, plato.Descripcion);
+                        if (!analysis.ok) {
+                            console.warn("Análisis omitido por error de IA para:", plato.ES_Nombre);
+                            count++;
+                            return;
+                        }
                         const updates: Partial<Plato> = {};
-                        if (analysis.allergens) {
+                        if (Array.isArray(analysis.allergens)) {
                             updates.Alergenos = analysis.allergens;
                         }
-                        if (analysis.translations) {
+                        if (analysis.translations && Object.keys(analysis.translations).length > 0) {
                             Object.keys(analysis.translations).forEach(code => {
-                                (updates as any)[`${code}_Nombre`] = analysis.translations[code];
+                                if (analysis.translations[code]) {
+                                    (updates as any)[`${code}_Nombre`] = analysis.translations[code];
+                                }
                             });
                         }
                         if (Object.keys(updates).length > 0) {

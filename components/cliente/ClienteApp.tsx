@@ -97,7 +97,7 @@ const DishItem: React.FC<DishItemProps> = ({
                             {allergensToDisplay.map((a: any) => (
                                 <div 
                                     key={a} 
-                                    className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shadow-sm ${allergenColors[a] || 'bg-gray-400'} ${selectedAllergens.includes(a) ? 'ring-1 ring-slate-500 scale-110' : ''}`} 
+                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-sm ${allergenColors[a] || 'bg-gray-400'} ${isKanala ? 'ring-1 ring-white/30' : ''} ${selectedAllergens.includes(a) ? (isKanala ? 'ring-2 ring-white scale-110' : 'ring-2 ring-slate-700 scale-110') : ''}`} 
                                     title={t.alergenos[a] || a}
                                 ></div>
                             ))}
@@ -247,12 +247,12 @@ const ClienteApp: React.FC = () => {
         
         return (
             <div className="sticky top-[60px] sm:top-[72px] z-30 -mx-4 sm:-mx-6 mb-4 animate-fade-in">
-                <div className="bg-white/95 backdrop-blur-md border-t border-slate-200 border-b-4 border-b-slate-300 shadow-md py-2 px-4 sm:px-6">
+                <div className={`backdrop-blur-md border-t border-b-4 shadow-md py-2 px-4 sm:px-6 ${isKanala ? 'bg-neutral-900/95 border-white/10 border-b-neutral-800' : 'bg-white/95 border-slate-200 border-b-slate-300'}`}>
                     <div className="max-w-5xl mx-auto flex flex-col gap-1">
                         <div className="flex justify-between items-center px-1 mb-1">
-                            <p className="text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{t.infoAlergenos}</p>
+                            <p className={`text-[9px] sm:text-xs font-black uppercase tracking-[0.2em] ${isKanala ? 'text-neutral-400' : 'text-slate-400'}`}>{t.infoAlergenos}</p>
                             {selectedAllergens.length > 0 && (
-                                <button onClick={() => setSelectedAllergens([])} className="text-[9px] bg-slate-800 text-white px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm hover:bg-slate-700 transition-colors">
+                                <button onClick={() => setSelectedAllergens([])} className={`text-[9px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm transition-colors ${isKanala ? 'bg-white text-black hover:bg-neutral-200' : 'bg-slate-800 text-white hover:bg-slate-700'}`}>
                                     <IconX width={8} height={8}/> {lang === 'ES' ? 'LIMPIAR' : 'CLEAR'}
                                 </button>
                             )}
@@ -264,10 +264,10 @@ const ClienteApp: React.FC = () => {
                                     <button 
                                         key={key} 
                                         onClick={() => setSelectedAllergens(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])}
-                                        className={`flex items-center gap-1 transition-all duration-200 rounded-md px-1.5 py-0.5 border ${config.name.toLowerCase().includes('kanala') ? (isSelected ? 'bg-neutral-800 border-white shadow-sm ring-1 ring-neutral-700 z-10 text-white' : 'bg-transparent border-white/10 hover:border-white/30 text-white/60') : (isSelected ? 'bg-white border-slate-800 shadow-sm ring-1 ring-slate-200 z-10' : 'bg-white/40 border-slate-100 hover:border-slate-300')}`}
+                                        className={`flex items-center gap-1 transition-all duration-200 rounded-md px-1.5 py-0.5 border ${isKanala ? (isSelected ? 'bg-neutral-700 border-white shadow-sm ring-1 ring-white/40 z-10' : 'bg-neutral-800/60 border-white/15 hover:border-white/40') : (isSelected ? 'bg-white border-slate-800 shadow-sm ring-1 ring-slate-200 z-10' : 'bg-white/40 border-slate-100 hover:border-slate-300')}`}
                                     >
-                                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${allergenColors[key] || 'bg-gray-400'}`}></span>
-                                        <span className={`text-[9px] font-bold uppercase whitespace-nowrap tracking-tight ${isSelected ? 'text-slate-900' : 'text-slate-500'}`}>{t.alergenos[key] || key}</span>
+                                        <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${allergenColors[key] || 'bg-gray-400'} ${isKanala ? 'ring-1 ring-white/30' : ''}`}></span>
+                                        <span className={`text-[9px] font-bold uppercase whitespace-nowrap tracking-tight ${isKanala ? (isSelected ? 'text-white' : 'text-neutral-300') : (isSelected ? 'text-slate-900' : 'text-slate-500')}`}>{t.alergenos[key] || key}</span>
                                     </button>
                                 );
                             })}

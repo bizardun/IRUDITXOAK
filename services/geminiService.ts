@@ -19,7 +19,7 @@ export const translateText = async (text: string, targetLang: string, targetLang
         const userQuery = `Translate "${text}" to ${targetLangName} (code: ${targetLang}).`;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-4-hydrogen',
             contents: userQuery,
             config: {
                 systemInstruction: systemPrompt,

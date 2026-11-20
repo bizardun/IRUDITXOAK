@@ -32,7 +32,7 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
         const month = (now.getMonth() + 1).toString().padStart(2, '0');
         const year = now.getFullYear().toString();
         setDateStr(`${day}/${month}/${year}`);
-    }, [config.id]);
+    }, [config.id, domain]);
 
     useEffect(() => {
         if (!cleanUrl) return;
