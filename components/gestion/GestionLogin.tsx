@@ -10,6 +10,8 @@ const GestionLogin: React.FC<GestionLoginProps> = ({ onLogin }) => {
     const { config } = useConfig();
     const isKanala = config?.name?.toLowerCase().includes('kanala');
     const isBolina = config?.name?.toLowerCase().includes('boliña') || config?.id === 'bolina_viejo_v1';
+    const isDarkCustom = !isKanala && !isBolina && Boolean(config?.theme?.customColors?.isDark);
+    const isDarkTheme = isKanala || isDarkCustom;
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -33,8 +35,8 @@ const GestionLogin: React.FC<GestionLoginProps> = ({ onLogin }) => {
     };
 
     return (
-        <div className={`flex items-center justify-center min-h-[80vh] p-4 ${isKanala ? 'bg-black text-white' : 'bg-slate-50 text-slate-800'}`}>
-            <div className={`w-full max-w-sm p-8 rounded-2xl shadow-xl border space-y-6 ${isKanala ? 'bg-neutral-900 border-white/15' : 'bg-white border-slate-200'}`}>
+        <div className={`flex items-center justify-center min-h-[80vh] p-4 ${isDarkTheme ? 'bg-black text-white' : 'bg-slate-50 text-slate-800'}`}>
+            <div className={`w-full max-w-sm p-8 rounded-2xl shadow-xl border space-y-6 ${isDarkTheme ? 'bg-neutral-900 border-white/15' : 'bg-white border-slate-200'}`}>
                 <div className="text-center space-y-3">
                     {isKanala ? (
                         <img
@@ -49,11 +51,21 @@ const GestionLogin: React.FC<GestionLoginProps> = ({ onLogin }) => {
                             className="h-20 mx-auto object-contain mix-blend-multiply"
                         />
                     ) : config.logoUrl ? (
-                        <img
-                            src={config.logoUrl}
-                            alt={config.name}
-                            className="h-20 mx-auto object-contain"
-                        />
+                        isDarkCustom ? (
+                            <div className="inline-flex items-center justify-center bg-white rounded-2xl p-2 shadow-md">
+                                <img
+                                    src={config.logoUrl}
+                                    alt={config.name}
+                                    className="h-16 mx-auto object-contain"
+                                />
+                            </div>
+                        ) : (
+                            <img
+                                src={config.logoUrl}
+                                alt={config.name}
+                                className="h-20 mx-auto object-contain"
+                            />
+                        )
                     ) : (
                         <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl mx-auto flex items-center justify-center border border-blue-100">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -63,10 +75,10 @@ const GestionLogin: React.FC<GestionLoginProps> = ({ onLogin }) => {
                         </div>
                     )}
                     <div>
-                        <h1 className={`text-xl font-bold font-lora ${isKanala ? 'text-white' : 'text-slate-800'}`}>
+                        <h1 className={`text-xl font-bold font-lora ${isDarkTheme ? 'text-white' : 'text-slate-800'}`}>
                             Acceso Propietario
                         </h1>
-                        <p className={`text-xs mt-1 ${isKanala ? 'text-neutral-400' : 'text-slate-500'}`}>
+                        <p className={`text-xs mt-1 ${isDarkTheme ? 'text-neutral-400' : 'text-slate-500'}`}>
                             Panel de Gestión — {config.name}
                         </p>
                     </div>
@@ -74,7 +86,7 @@ const GestionLogin: React.FC<GestionLoginProps> = ({ onLogin }) => {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isKanala ? 'text-neutral-300' : 'text-slate-600'}`}>
+                        <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isDarkTheme ? 'text-neutral-300' : 'text-slate-600'}`}>
                             Contraseña de gestión
                         </label>
                         <input
@@ -84,7 +96,7 @@ const GestionLogin: React.FC<GestionLoginProps> = ({ onLogin }) => {
                             placeholder="Introduce tu clave"
                             autoFocus
                             className={`w-full px-4 py-3 rounded-xl border text-center text-base tracking-widest outline-none transition-all ${
-                                isKanala
+                                isDarkTheme
                                     ? 'bg-neutral-800 border-white/20 text-white placeholder-neutral-500 focus:border-white'
                                     : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
                             }`}
@@ -102,7 +114,7 @@ const GestionLogin: React.FC<GestionLoginProps> = ({ onLogin }) => {
                         type="submit"
                         disabled={loading}
                         className={`w-full py-3 rounded-xl font-bold text-sm transition-all shadow-md disabled:opacity-50 ${
-                            isKanala
+                            isDarkTheme
                                 ? 'bg-white text-black hover:bg-neutral-200'
                                 : 'bg-blue-600 text-white hover:bg-blue-700'
                         }`}

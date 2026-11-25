@@ -66,11 +66,17 @@ const MainLayout = () => {
     }
 
     const isKanala = config.name.toLowerCase().includes('kanala');
+    const isBolina = config.name.toLowerCase().includes('boliña') || config.id === 'bolina_viejo_v1';
+    const customColors = !isKanala && !isBolina ? config.theme?.customColors : undefined;
     
     return (
         <DataProvider key={config.id}>
-            <div className={`min-h-screen leading-tight ${fontClass} ${isKanala ? 'bg-black text-white' : themeColors[themeStyle]}`}>
+            <div
+                className={`min-h-screen leading-tight ${fontClass} ${isKanala ? 'bg-black text-white' : themeColors[themeStyle]}`}
+                style={customColors ? { backgroundColor: customColors.background, color: customColors.text } : undefined}
+            >
             {isKanala && <style>{`body { background-color: black; }`}</style>}
+            {customColors && <style>{`body { background-color: ${customColors.background}; }`}</style>}
                 {/* Navbar */}
                 {hasAdminAccess && (
                     <div className="print:hidden relative z-40 w-full bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm py-2 px-4">

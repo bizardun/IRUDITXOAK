@@ -17,7 +17,7 @@ export interface Plato {
     DE_Nombre: string;
     IT_Nombre: string;
     Categoria: string; // "CARTA", "MENU", "CARTA,MENU", etc.
-    Tipo: TipoPlato;
+    Tipo: TipoPlato | string;
     Activo_Dia: boolean;
     Rol_Menu: RolMenu;
     Es_Racion: boolean; 
@@ -37,6 +37,15 @@ export interface CustomThemeColors {
     text: string;
     accent: string;
     isDark?: boolean;
+}
+
+export interface DeliveryInfo {
+    title?: string;
+    titleEU?: string;
+    phones?: string[];
+    address?: string;
+    zones?: string;
+    note?: string;
 }
 
 export interface UploadedAppFile {
@@ -65,6 +74,10 @@ export interface RestaurantConfig {
     adminPassword?: string;
     officialWebsite?: string;
     publicUrl?: string;
+    sectionOrder?: string[];
+    sectionTranslations?: Record<string, Record<string, string>>;
+    sectionNotes?: Record<string, Record<string, string>>;
+    deliveryInfo?: DeliveryInfo;
 }
 
 export interface Language {

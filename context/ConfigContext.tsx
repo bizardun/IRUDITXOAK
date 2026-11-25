@@ -140,18 +140,29 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             let newPlatos: any[] = [];
             let newSlogan = '';
             let finalTheme: ThemeConfig = { ...theme };
+            let sectionOrder: string[] | undefined = undefined;
+            let sectionTranslations: Record<string, Record<string, string>> | undefined = undefined;
+            let sectionNotes: Record<string, Record<string, string>> | undefined = undefined;
+            let deliveryInfo: RestaurantConfig['deliveryInfo'] = undefined;
 
             if (prompt || files.length > 0) {
-                try {
-                    const aiConfig = await api.generateAppConfig(prompt, files, name);
-                    newPlatos = aiConfig.initialPlatos;
-                    newSlogan = aiConfig.slogan;
-                    if (aiConfig.customColors) {
-                        finalTheme = { ...finalTheme, customColors: aiConfig.customColors };
-                    }
-                } catch (err) {
-                    console.error("Fallo IA en generación", err);
-                    newPlatos = [];
+                const aiConfig = await api.generateAppConfig(prompt, files, name);
+                newPlatos = aiConfig.initialPlatos;
+                newSlogan = aiConfig.slogan;
+                if (aiConfig.customColors) {
+                    finalTheme = { ...finalTheme, customColors: aiConfig.customColors };
+                }
+                if (aiConfig.sectionOrder && aiConfig.sectionOrder.length > 0) {
+                    sectionOrder = aiConfig.sectionOrder;
+                }
+                if (aiConfig.sectionTranslations) {
+                    sectionTranslations = aiConfig.sectionTranslations;
+                }
+                if (aiConfig.sectionNotes) {
+                    sectionNotes = aiConfig.sectionNotes;
+                }
+                if (aiConfig.deliveryInfo) {
+                    deliveryInfo = aiConfig.deliveryInfo;
                 }
             }
 
@@ -162,7 +173,11 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 theme: finalTheme,
                 adminPassword: '1234',
                 initialPlatos: newPlatos,
-                ...(logoUrl ? { logoUrl } : {})
+                ...(logoUrl ? { logoUrl } : {}),
+                ...(sectionOrder ? { sectionOrder } : {}),
+                ...(sectionTranslations ? { sectionTranslations } : {}),
+                ...(sectionNotes ? { sectionNotes } : {}),
+                ...(deliveryInfo ? { deliveryInfo } : {})
             };
 
             await api.saveApp(newApp, true);

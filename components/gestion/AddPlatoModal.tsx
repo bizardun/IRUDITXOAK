@@ -35,8 +35,14 @@ const ALLERGEN_LIST: { id: Alergeno; label: string }[] = [
 
 export default function AddPlatoModal({ isOpen, onClose, mode, refreshData, platoToEdit }: AddPlatoModalProps) {
     const { config } = useConfig();
-    const isKanala = config.name.toLowerCase().includes('kanala');
-    const initialData = { ES_Nombre: '', Precio: '', Tipo: ['ENTRANTE', 'ENSALADA', 'ARROZ', 'MARISCO', 'PESCADO', 'CARNE', 'POSTRE'].includes(mode) ? mode : 'ENTRANTE' };
+    const isKanala = config.name.toLowerCase().includes('kanala') || Boolean(config.theme?.customColors?.isDark);
+    const availableTipos = Array.from(new Set([
+        ...(Array.isArray(config.sectionOrder) ? config.sectionOrder : []),
+        ...(platoToEdit?.Tipo ? [platoToEdit.Tipo] : []),
+        ...Object.keys(translations.ES.tipos)
+    ]));
+    const defaultTipo = availableTipos.includes(mode) ? mode : (config.sectionOrder?.[0] || 'ENTRANTE');
+    const initialData = { ES_Nombre: '', Precio: '', Tipo: defaultTipo };
     const [data, setData] = useState<any>(initialData);
     const [translationsData, setTranslationsData] = useState<Record<string, string>>({});
     const [selectedAllergens, setSelectedAllergens] = useState<Alergeno[]>([]);
@@ -93,9 +99,11 @@ export default function AddPlatoModal({ isOpen, onClose, mode, refreshData, plat
         e.preventDefault();
         setLoading(true);
         try {
+            const rawPrice = String(data.Precio ?? '').trim();
+            const parsedPrice = rawPrice.includes('/') ? rawPrice : (parseFloat(rawPrice.replace(',', '.')) || 0);
             const payload: any = { 
                 ...data, 
-                Precio: parseFloat(data.Precio) || 0,
+                Precio: parsedPrice,
                 Alergenos: selectedAllergens,
                 Categoria: platoToEdit?.Categoria || (mode === 'menu' ? 'MENU,CARTA' : 'CARTA'),
                 Descripcion: data.Descripcion
@@ -138,12 +146,12 @@ export default function AddPlatoModal({ isOpen, onClose, mode, refreshData, plat
                         <div>
                             <label className={`block text-xs font-bold mb-1.5 uppercase tracking-wide ${isKanala ? 'text-neutral-400' : 'text-slate-700'}`}>Tipo</label>
                             <select className={`w-full border rounded-lg p-3 text-sm font-semibold outline-none ${isKanala ? 'bg-neutral-800 border-white/20 text-white' : 'bg-slate-50 border-slate-300'}`} value={data.Tipo} onChange={e => setData({...data, Tipo: e.target.value as any})}>
-                                {Object.keys(translations.ES.tipos).map(k => <option key={k} value={k}>{k}</option>)}
+                                {availableTipos.map(k => <option key={k} value={k}>{config.sectionTranslations?.[k]?.['ES'] || k}</option>)}
                             </select>
                         </div>
                         <div>
                             <label className={`block text-xs font-bold mb-1.5 uppercase tracking-wide ${isKanala ? 'text-neutral-400' : 'text-slate-700'}`}>Precio (€)</label>
-                            <input required type="number" step="0.1" className={`w-full border rounded-lg p-3 font-bold outline-none text-right ${isKanala ? 'bg-neutral-800 border-white/20 text-white' : 'bg-slate-50 border-slate-300'}`} value={data.Precio} onChange={e => setData({...data, Precio: e.target.value})} />
+                            <input required type="text" placeholder="Ej: 16 o 6,50€ / 9€" className={`w-full border rounded-lg p-3 font-bold outline-none text-right ${isKanala ? 'bg-neutral-800 border-white/20 text-white' : 'bg-slate-50 border-slate-300'}`} value={data.Precio} onChange={e => setData({...data, Precio: e.target.value})} />
                         </div>
                     </div>
 

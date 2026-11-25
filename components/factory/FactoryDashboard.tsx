@@ -258,9 +258,9 @@ export default function FactoryDashboard() {
             setPrompt('');
             setUploadedFiles([]);
             setSelectedLogoFileId(null);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creando app:', error);
-            setCreateError('Error creando la app. Revisa los archivos o intenta de nuevo.');
+            setCreateError(error?.message || 'Error creando la app. Revisa los archivos o intenta de nuevo.');
         } finally {
             setIsLoading(false);
         }

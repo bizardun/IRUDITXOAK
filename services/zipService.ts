@@ -15,8 +15,7 @@ const packageJson = `{
   },
   "dependencies": {
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "@google/genai": "^1.30.0"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
@@ -78,12 +77,6 @@ const indexHtml = (title: string) => `<!DOCTYPE html>
 </html>`;
 
 const API_SOURCE = `
-import { GoogleGenAI } from "@google/genai";
-const apiKey = typeof process !== 'undefined' && process.env.API_KEY ? process.env.API_KEY : "";
-const ai = new GoogleGenAI({ apiKey });
-
-const extractSources = (res) => res.candidates?.[0]?.groundingMetadata?.groundingChunks?.map(c => ({ title: c.web?.title, uri: c.web?.uri })).filter(s => s.uri) || [];
-
 export default {
     getPlatos: async () => JSON.parse(localStorage.getItem('restaurant_db') || '[]'),
     getMenuPrice: async () => parseFloat(localStorage.getItem('menu_price') || '16.5'),
@@ -102,16 +95,13 @@ export default {
         localStorage.setItem('restaurant_db', JSON.stringify(c.filter(x => x.ID_Plato !== id)));
     },
     analyzeDish: async (name) => {
-        const resp = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: \`Analyze: "\${name}"\`,
-            config: { 
-                systemInstruction: "Translate to EU, EN, FR, DE, IT. For Basque (EU), use Google Search to cross-reference with https://www.euskadi.eus/diccionario-elhuyar/. Detect allergens. JSON format.",
-                responseMimeType: "application/json",
-                tools: [{ googleSearch: {} }]
-            }
+        const resp = await fetch('/api/gemini/analyze-dish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dishName: name })
         });
-        return { ...JSON.parse(resp.text), sources: extractSources(resp) };
+        if (!resp.ok) throw new Error('Error analizando plato');
+        return await resp.json();
     }
 };
 `;

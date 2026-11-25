@@ -33,6 +33,9 @@ interface DishItemProps {
     showAllergens: boolean;
     selectedAllergens: string[];
     isKanala?: boolean;
+    isDarkTheme?: boolean;
+    accentColor?: string;
+    wrapText?: boolean;
 }
 
 const DishItem: React.FC<DishItemProps> = ({ 
@@ -43,8 +46,12 @@ const DishItem: React.FC<DishItemProps> = ({
     t,
     showAllergens,
     selectedAllergens,
-    isKanala
+    isKanala,
+    isDarkTheme,
+    accentColor,
+    wrapText
 }) => {
+    const dark = Boolean(isKanala || isDarkTheme);
     const allergensToDisplay = useMemo(() => {
         if (!p.Alergenos) return [];
         if (selectedAllergens.length > 0) {
@@ -76,12 +83,14 @@ const DishItem: React.FC<DishItemProps> = ({
 
     const name = (p as any)[`${lang}_Nombre`] || p.ES_Nombre;
     const hasAllergens = allergensToDisplay.length > 0;
+    const hasPrice = typeof p.Precio === 'number' ? p.Precio > 0 : Boolean(String(p.Precio || '').trim());
+    const formattedPrice = typeof p.Precio === 'number' ? `€${p.Precio.toFixed(2)}` : String(p.Precio);
 
     return (
-        <li className={`list-none py-1 sm:py-2 border-b last:border-0 animate-fade-in ${isKanala ? 'border-white/10' : 'border-slate-50'}`}>
-            <div className="flex flex-row items-center justify-between gap-4 w-full overflow-hidden">
+        <li className={`list-none py-1.5 sm:py-2 border-b last:border-0 animate-fade-in ${dark ? 'border-white/10' : 'border-slate-50'}`}>
+            <div className="flex flex-row items-center justify-between gap-3 sm:gap-4 w-full overflow-hidden">
                 <div className={`flex-grow min-w-0 transition-opacity duration-300 ${isRestricted ? 'opacity-40' : ''}`}>
-                    <span className={`text-[13px] sm:text-base font-medium truncate block ${isRestricted ? (isKanala ? 'text-white/40 line-through decoration-white/40' : 'text-slate-500 line-through decoration-slate-400') : (isKanala ? 'text-white' : 'text-slate-800')}`}>
+                    <span className={`text-[13px] sm:text-base font-medium block ${wrapText ? 'break-words leading-snug' : 'truncate'} ${isRestricted ? (dark ? 'text-white/40 line-through decoration-white/40' : 'text-slate-500 line-through decoration-slate-400') : (dark ? 'text-white' : 'text-slate-800')}`}>
                         {name}
                         {isDescartadoDia && (
                             <span className="ml-2 text-[10px] sm:text-xs font-normal italic no-underline opacity-90 inline-block tracking-normal">
@@ -91,23 +100,26 @@ const DishItem: React.FC<DishItemProps> = ({
                     </span>
                 </div>
 
-                <div className="flex flex-row items-center gap-2.5 flex-shrink-0 ml-auto">
+                <div className="flex flex-row items-center gap-2 sm:gap-2.5 flex-shrink-0 ml-auto">
                     {(showAllergens || isAllergenRestricted) && hasAllergens && (
-                        <div className="flex flex-row items-center gap-1.5 sm:gap-2">
+                        <div className="flex flex-row items-center gap-1 sm:gap-1.5 flex-wrap justify-end max-w-[70px] sm:max-w-none">
                             {allergensToDisplay.map((a: any) => (
                                 <div 
                                     key={a} 
-                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-sm ${allergenColors[a] || 'bg-gray-400'} ${isKanala ? 'ring-1 ring-white/30' : ''} ${selectedAllergens.includes(a) ? (isKanala ? 'ring-2 ring-white scale-110' : 'ring-2 ring-slate-700 scale-110') : ''}`} 
+                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-sm ${allergenColors[a] || 'bg-gray-400'} ${dark ? 'ring-1 ring-white/30' : ''} ${selectedAllergens.includes(a) ? (dark ? 'ring-2 ring-white scale-110' : 'ring-2 ring-slate-700 scale-110') : ''}`} 
                                     title={t.alergenos[a] || a}
                                 ></div>
                             ))}
                         </div>
                     )}
 
-                    {!isMenuMode && p.Precio > 0 && (
-                        <div className={`w-12 sm:w-16 text-right flex-shrink-0 transition-opacity duration-300 ${isRestricted ? 'opacity-40' : ''}`}>
-                            <span className={`text-[13px] sm:text-base font-bold whitespace-nowrap ${isKanala ? 'text-white' : 'text-slate-900'}`}>
-                                {typeof p.Precio === 'number' ? `€${p.Precio.toFixed(2)}` : p.Precio}
+                    {!isMenuMode && hasPrice && (
+                        <div className={`min-w-[3rem] sm:min-w-[4rem] text-right flex-shrink-0 transition-opacity duration-300 ${isRestricted ? 'opacity-40' : ''}`}>
+                            <span
+                                className={`text-[13px] sm:text-base font-bold whitespace-nowrap ${dark ? 'text-white' : 'text-slate-900'}`}
+                                style={accentColor && !isRestricted ? { color: accentColor } : undefined}
+                            >
+                                {formattedPrice}
                             </span>
                         </div>
                     )}
@@ -121,8 +133,14 @@ const ClienteApp: React.FC = () => {
     const { platos, menuPrice, loading, refreshData } = useData();
     const { config } = useConfig();
     const isKanala = config?.name?.toLowerCase().includes('kanala');
+    const isBolina = config?.name?.toLowerCase().includes('boliña') || config?.id === 'bolina_viejo_v1';
+    const customColors = !isKanala && !isBolina ? config.theme?.customColors : undefined;
+    const isCustomDark = Boolean(customColors?.isDark);
+    const isDarkTheme = isKanala || isCustomDark;
+    const useMetallicFlags = isKanala || isCustomDark;
+
     const [lang, setLang] = useState<Language['code']>('ES');
-    const [view, setView] = useState<string>(config?.name?.toLowerCase().includes('kanala') ? 'ALL' : 'menu');
+    const [view, setView] = useState<string>(isKanala ? 'ALL' : 'menu');
     const [showAllergens, setShowAllergens] = useState(false);
     const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
     const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({});
@@ -139,11 +157,21 @@ const ClienteApp: React.FC = () => {
 
     useEffect(() => {
         setExpandedCats({});
-    }, [view]);
+    }, [view, config.id]);
 
     const t = translations[lang];
     // Los platos descartados o no activos se mantienen visibles pero atenuados en gris como en los alérgenos
     const activePlatos = useMemo(() => platos, [platos]);
+    const hasMenuDelDia = useMemo(() => activePlatos.some(p => p.Rol_Menu && p.Rol_Menu !== 'RACION'), [activePlatos]);
+    const showTabs = !isKanala && (isBolina || hasMenuDelDia);
+
+    useEffect(() => {
+        if (!showTabs) {
+            setView('ALL');
+        } else if (view === 'ALL') {
+            setView('menu');
+        }
+    }, [showTabs, config.id]);
     
     const filteredPlatos = useMemo(() => {
         // No filtramos, mostramos todo. El filtrado visual se hace en DishItem.
@@ -180,61 +208,94 @@ const ClienteApp: React.FC = () => {
         if (!showAllergens) return [];
         const activeSet = new Set<string>();
         let contextItems: Plato[] = [];
-        if (view === 'menu') {
+        if (view === 'menu' && showTabs) {
             contextItems = activePlatos.filter(p => p.Rol_Menu && p.Rol_Menu !== 'RACION');
         } else {
             const isRaciones = view === 'raciones';
             contextItems = activePlatos.filter(p => {
                 const inCarta = p.Categoria.includes('CARTA');
-            if (config.name.toLowerCase().includes('kanala')) return inCarta;
+                if (!showTabs) return inCarta;
                 return isRaciones ? (inCarta && p.Es_Racion) : inCarta;
             });
         }
         contextItems.forEach(p => p.Alergenos?.forEach(a => activeSet.add(a)));
         return Array.from(activeSet).sort();
-    }, [activePlatos, view, showAllergens]);
+    }, [activePlatos, view, showAllergens, showTabs]);
 
     const toggleCat = (cat: string) => {
         setExpandedCats(prev => ({ ...prev, [cat]: !prev[cat] }));
     };
 
-    const renderGroup = (items: any[], typeLabel: string, catKey: string, isMenuMode: boolean = false) => {
-        const isKanala = config.name.toLowerCase().includes('kanala');
-        const hc = isKanala ? {
-            bg: 'bg-neutral-900',
+    const renderGroup = (items: any[], typeLabel: string, catKey: string, isMenuMode: boolean = false, defaultOpen: boolean = false) => {
+        const hc = isDarkTheme ? {
+            bg: customColors ? '' : 'bg-neutral-900',
             text: 'text-white',
             border: 'border-white/10',
             hover: 'hover:bg-white/5 active:bg-white/10'
         } : {
-            bg: 'bg-white',
+            bg: customColors ? '' : 'bg-white',
             text: 'text-slate-800',
             border: styles.border,
             hover: 'hover:bg-slate-50 active:bg-slate-100'
         };
         if (items.length === 0) return null;
-        const isExpanded = expandedCats[catKey] ?? (isMenuMode);
+        const isExpanded = expandedCats[catKey] ?? (isMenuMode || defaultOpen);
+        const sectionNote = config.sectionNotes?.[catKey]?.[lang] || config.sectionNotes?.[catKey]?.['ES'];
 
         return (
             <div key={catKey} className="mb-1 sm:mb-2 overflow-hidden">
                 <button 
                     onClick={() => !isMenuMode && toggleCat(catKey)}
-                    className={`w-full flex items-center justify-between text-[11px] sm:text-lg font-bold py-3 sm:py-4 px-1 capitalize transition-all border-b ${hc.border} ${hc.text} ${hc.bg} ${!isMenuMode ? hc.hover : 'cursor-default'}`}
+                    className={`w-full flex items-center justify-between text-[12px] sm:text-lg font-bold py-3 sm:py-4 px-1 uppercase tracking-wide transition-all border-b ${hc.border} ${hc.text} ${hc.bg} ${!isMenuMode ? hc.hover : 'cursor-default'}`}
+                    style={customColors ? {
+                        backgroundColor: customColors.surface,
+                        color: customColors.accent,
+                        borderColor: `${customColors.accent}35`
+                    } : undefined}
                 >
-                    <div className="flex items-center gap-2">
-                        {!isMenuMode && <span className={`w-1.5 h-1.5 rounded-full ${themeStyle === 'modern' ? 'bg-blue-500' : themeStyle === 'fresh' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>}
-                        {typeLabel}
-                        {!isMenuMode && <span className="text-[9px] opacity-40 ml-1 font-medium">({items.length})</span>}
+                    <div className="flex items-center gap-2 text-left">
+                        {!isMenuMode && (
+                            <span
+                                className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${themeStyle === 'modern' ? 'bg-blue-500' : themeStyle === 'fresh' ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                style={customColors ? { backgroundColor: customColors.accent } : undefined}
+                            ></span>
+                        )}
+                        <span>{typeLabel}</span>
+                        {!isMenuMode && <span className="text-[10px] opacity-50 ml-1 font-medium">({items.length})</span>}
                     </div>
                     {!isMenuMode && (
                         <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-                            <IconArrowDown className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-slate-300" />
+                            <IconArrowDown className={`w-3.5 h-3.5 sm:w-5 sm:h-5 ${isDarkTheme ? 'text-white/50' : 'text-slate-300'}`} />
                         </div>
                     )}
                 </button>
                 
-                <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[2000px] opacity-100 py-1 sm:py-2' : 'max-h-0 opacity-0'}`}>
+                <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[6000px] opacity-100 py-1 sm:py-2' : 'max-h-0 opacity-0'}`}>
+                    {sectionNote && (
+                        <p
+                            className={`text-[11px] sm:text-xs italic px-2 py-2 mb-2 rounded-lg border ${isDarkTheme ? 'bg-white/5 border-white/10 text-white/75' : 'bg-slate-50 border-slate-200 text-slate-600'}`}
+                            style={customColors ? { borderColor: `${customColors.accent}30` } : undefined}
+                        >
+                            {sectionNote}
+                        </p>
+                    )}
                     <ul className="space-y-0.5">
-                        {items.map(p => <DishItem key={p.ID_Plato} p={p} lang={lang} isMenuMode={isMenuMode} styles={styles} t={t} showAllergens={showAllergens} selectedAllergens={selectedAllergens} isKanala={isKanala} />)}
+                        {items.map(p => (
+                            <DishItem
+                                key={p.ID_Plato}
+                                p={p}
+                                lang={lang}
+                                isMenuMode={isMenuMode}
+                                styles={styles}
+                                t={t}
+                                showAllergens={showAllergens}
+                                selectedAllergens={selectedAllergens}
+                                isKanala={isKanala}
+                                isDarkTheme={isDarkTheme}
+                                accentColor={customColors?.accent}
+                                wrapText={Boolean(customColors)}
+                            />
+                        ))}
                     </ul>
                 </div>
             </div>
@@ -247,12 +308,12 @@ const ClienteApp: React.FC = () => {
         
         return (
             <div className="sticky top-[60px] sm:top-[72px] z-30 -mx-4 sm:-mx-6 mb-4 animate-fade-in">
-                <div className={`backdrop-blur-md border-t border-b-4 shadow-md py-2 px-4 sm:px-6 ${isKanala ? 'bg-neutral-900/95 border-white/10 border-b-neutral-800' : 'bg-white/95 border-slate-200 border-b-slate-300'}`}>
+                <div className={`backdrop-blur-md border-t border-b-4 shadow-md py-2 px-4 sm:px-6 ${isDarkTheme ? 'bg-neutral-900/95 border-white/10 border-b-neutral-800' : 'bg-white/95 border-slate-200 border-b-slate-300'}`}>
                     <div className="max-w-5xl mx-auto flex flex-col gap-1">
                         <div className="flex justify-between items-center px-1 mb-1">
-                            <p className={`text-[9px] sm:text-xs font-black uppercase tracking-[0.2em] ${isKanala ? 'text-neutral-400' : 'text-slate-400'}`}>{t.infoAlergenos}</p>
+                            <p className={`text-[9px] sm:text-xs font-black uppercase tracking-[0.2em] ${isDarkTheme ? 'text-neutral-400' : 'text-slate-400'}`}>{t.infoAlergenos}</p>
                             {selectedAllergens.length > 0 && (
-                                <button onClick={() => setSelectedAllergens([])} className={`text-[9px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm transition-colors ${isKanala ? 'bg-white text-black hover:bg-neutral-200' : 'bg-slate-800 text-white hover:bg-slate-700'}`}>
+                                <button onClick={() => setSelectedAllergens([])} className={`text-[9px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm transition-colors ${isDarkTheme ? 'bg-white text-black hover:bg-neutral-200' : 'bg-slate-800 text-white hover:bg-slate-700'}`}>
                                     <IconX width={8} height={8}/> {lang === 'ES' ? 'LIMPIAR' : 'CLEAR'}
                                 </button>
                             )}
@@ -264,10 +325,10 @@ const ClienteApp: React.FC = () => {
                                     <button 
                                         key={key} 
                                         onClick={() => setSelectedAllergens(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])}
-                                        className={`flex items-center gap-1 transition-all duration-200 rounded-md px-1.5 py-0.5 border ${isKanala ? (isSelected ? 'bg-neutral-700 border-white shadow-sm ring-1 ring-white/40 z-10' : 'bg-neutral-800/60 border-white/15 hover:border-white/40') : (isSelected ? 'bg-white border-slate-800 shadow-sm ring-1 ring-slate-200 z-10' : 'bg-white/40 border-slate-100 hover:border-slate-300')}`}
+                                        className={`flex items-center gap-1 transition-all duration-200 rounded-md px-1.5 py-0.5 border ${isDarkTheme ? (isSelected ? 'bg-neutral-700 border-white shadow-sm ring-1 ring-white/40 z-10' : 'bg-neutral-800/60 border-white/15 hover:border-white/40') : (isSelected ? 'bg-white border-slate-800 shadow-sm ring-1 ring-slate-200 z-10' : 'bg-white/40 border-slate-100 hover:border-slate-300')}`}
                                     >
-                                        <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${allergenColors[key] || 'bg-gray-400'} ${isKanala ? 'ring-1 ring-white/30' : ''}`}></span>
-                                        <span className={`text-[9px] font-bold uppercase whitespace-nowrap tracking-tight ${isKanala ? (isSelected ? 'text-white' : 'text-neutral-300') : (isSelected ? 'text-slate-900' : 'text-slate-500')}`}>{t.alergenos[key] || key}</span>
+                                        <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${allergenColors[key] || 'bg-gray-400'} ${isDarkTheme ? 'ring-1 ring-white/30' : ''}`}></span>
+                                        <span className={`text-[9px] font-bold uppercase whitespace-nowrap tracking-tight ${isDarkTheme ? (isSelected ? 'text-white' : 'text-neutral-300') : (isSelected ? 'text-slate-900' : 'text-slate-500')}`}>{t.alergenos[key] || key}</span>
                                     </button>
                                 );
                             })}
@@ -285,7 +346,7 @@ const ClienteApp: React.FC = () => {
         return (
             <div className="animate-fade-in max-w-2xl mx-auto">
                 <div className="text-center mb-6 sm:mb-10">
-                    <span className={`inline-block border-y-2 py-1 px-8 text-xl sm:text-2xl font-bold ${styles.border} text-slate-800 uppercase tracking-tight`}>
+                    <span className={`inline-block border-y-2 py-1 px-8 text-xl sm:text-2xl font-bold ${styles.border} ${isDarkTheme ? 'text-white' : 'text-slate-800'} uppercase tracking-tight`}>
                         {t.menuDelDia}
                     </span>
                 </div>
@@ -296,7 +357,7 @@ const ClienteApp: React.FC = () => {
                     {menuItems.length === 0 && selectedAllergens.length > 0 && <div className="text-center py-8 text-slate-400 italic font-bold">Sin resultados</div>}
                 </div>
                 <div className={`mt-8 sm:mt-12 text-center border-t ${styles.border} pt-6 sm:pt-10`}>
-                    <p className="text-sm sm:text-lg text-slate-600">{t.precioPersona}</p>
+                    <p className={`text-sm sm:text-lg ${isDarkTheme ? 'text-white/70' : 'text-slate-600'}`}>{t.precioPersona}</p>
                     <p className={`text-2xl sm:text-4xl font-black ${styles.accent}`}>€{menuPrice.toFixed(2)}</p>
                 </div>
             </div>
@@ -304,10 +365,10 @@ const ClienteApp: React.FC = () => {
     };
 
     const renderCartaOrRaciones = () => {
-        const isRaciones = view === 'raciones';
+        const isRaciones = view === 'raciones' && showTabs;
         const filtered = filteredPlatos.filter(p => {
             const inCarta = p.Categoria.includes('CARTA');
-            if (config.name.toLowerCase().includes('kanala')) return inCarta;
+            if (!showTabs) return inCarta;
             if (isRaciones) return inCarta && p.Es_Racion;
             return inCarta;
         });
@@ -317,45 +378,89 @@ const ClienteApp: React.FC = () => {
             if (!groups[k]) groups[k] = [];
             groups[k].push(p);
         });
-        const order: string[] = ['PRODUCTO', 'PARA PICAR', 'DEL MAR', 'DE LA TIERRA', 'ARROCES', 'HAMBURGUESAS', 'PIZZAS', 'ENTRANTE', 'ENSALADA', 'ARROZ', 'MARISCO', 'PESCADO', 'CARNE', 'POSTRE'];
+        const customOrder = Array.isArray(config.sectionOrder) ? config.sectionOrder : [];
+        const defaultOrder: string[] = ['PRODUCTO', 'PARA PICAR', 'DEL MAR', 'DE LA TIERRA', 'ARROCES', 'HAMBURGUESAS', 'PIZZAS', 'ENTRANTE', 'ENSALADA', 'ARROZ', 'MARISCO', 'PESCADO', 'CARNE', 'POSTRE'];
+        const order = customOrder.length > 0 ? [...customOrder, ...defaultOrder] : defaultOrder;
         const sortedKeys = Object.keys(groups).sort((a, b) => {
-            const ia = order.indexOf(a as TipoPlato);
-            const ib = order.indexOf(b as TipoPlato);
-            return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+            const ia = order.indexOf(a);
+            const ib = order.indexOf(b);
+            if (ia === -1 && ib === -1) return 0;
+            return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
         });
         if (filtered.length === 0 && selectedAllergens.length > 0) return <div className="text-center py-8 text-slate-400 italic font-bold uppercase">Sin resultados</div>;
+        if (filtered.length === 0) return <div className="text-center py-12 opacity-60 italic">No hay platos disponibles todavía.</div>;
         
         return (
             <div className="animate-fade-in max-w-3xl mx-auto space-y-0.5">
-                {sortedKeys.map(k => renderGroup(groups[k], (t.tipos as any)[k] || k, k, false))}
+                {sortedKeys.map((k, idx) => {
+                    const label = config.sectionTranslations?.[k]?.[lang] || config.sectionTranslations?.[k]?.['ES'] || (t.tipos as any)[k] || k;
+                    const defaultOpen = Boolean(customColors && !showTabs && idx === 0);
+                    return renderGroup(groups[k], label, k, false, defaultOpen);
+                })}
             </div>
         );
     };
 
     if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold uppercase tracking-widest text-xs animate-pulse">Cargando...</div>;
 
-    const customColors = !isKanala && config.id !== 'bolina_viejo_v1' ? config.theme?.customColors : undefined;
-    const isCustomDark = Boolean(customColors?.isDark);
-    const useMetallicFlags = isKanala || isCustomDark;
-
     return (
         <div
-            className={`min-h-screen pb-16 px-4 sm:px-6 max-w-5xl mx-auto transition-colors duration-500 ${config.name.toLowerCase().includes('kanala') ? 'bg-black text-white' : ''}`}
+            className={`min-h-screen pb-16 px-4 sm:px-6 max-w-5xl mx-auto transition-colors duration-500 ${isKanala ? 'bg-black text-white' : ''}`}
             style={customColors ? { backgroundColor: customColors.background, color: customColors.text } : undefined}
         >
-            {config.name.toLowerCase().includes('kanala') && <style>{`body { background-color: black; }`}</style>}
+            {isKanala && <style>{`body { background-color: black; }`}</style>}
             {customColors && <style>{`body { background-color: ${customColors.background}; }`}</style>}
             <header className="pt-6 sm:pt-10 pb-4 text-center">
-                {config.name.toLowerCase().includes('kanala') ? (
+                {isKanala ? (
                     <img src="https://www.kanalabeach.eus/wp-content/uploads/2024/06/kanala-logos_LOGO-HORIZONTAL-zuria.png" alt={config.name} className="h-16 sm:h-20 mx-auto object-contain mb-4 sm:mb-6" />
-                ) : (config.name.toLowerCase().includes('boliña') || config.id === 'bolina_viejo_v1') ? (
+                ) : isBolina ? (
                     <img src="/logo-bolina.jpg" alt={config.name} className="h-24 sm:h-32 mx-auto object-contain mb-1 sm:mb-3 mix-blend-multiply" />
                 ) : config.logoUrl ? (
-                    <img src={config.logoUrl} alt={config.name} className="h-24 sm:h-32 mx-auto object-contain mb-2 sm:mb-4" />
+                    isCustomDark ? (
+                        <div className="inline-flex items-center justify-center bg-white rounded-2xl p-2 sm:p-2.5 shadow-xl mb-3 sm:mb-4 border-2" style={{ borderColor: customColors?.accent || '#F4B859' }}>
+                            <img src={config.logoUrl} alt={config.name} className="h-20 sm:h-28 w-auto object-contain" />
+                        </div>
+                    ) : (
+                        <img src={config.logoUrl} alt={config.name} className="h-24 sm:h-32 mx-auto object-contain mb-2 sm:mb-4" />
+                    )
                 ) : (
                     <h1 className="text-4xl sm:text-6xl font-bold mb-1 sm:mb-3 tracking-tight text-slate-900 leading-tight" style={customColors ? { color: customColors.text } : undefined}>{config.name}</h1>
                 )}
-                {config.slogan && <p className="text-slate-500 italic text-[13px] sm:text-base mb-2" style={customColors ? { color: customColors.text, opacity: 0.75 } : undefined}>{config.slogan}</p>}
+                {config.slogan && <p className="text-slate-500 italic text-[13px] sm:text-base mb-2" style={customColors ? { color: customColors.accent, opacity: 0.92 } : undefined}>{config.slogan}</p>}
+
+                {config.deliveryInfo && (
+                    <div
+                        className="max-w-xl mx-auto mb-4 px-4 py-2.5 rounded-2xl border text-center space-y-1 shadow-sm"
+                        style={customColors ? {
+                            backgroundColor: customColors.surface,
+                            borderColor: `${customColors.accent}45`,
+                            color: customColors.text
+                        } : undefined}
+                    >
+                        <div className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider" style={customColors ? { color: customColors.accent } : undefined}>
+                            {lang === 'EU' && config.deliveryInfo.titleEU ? config.deliveryInfo.titleEU : (config.deliveryInfo.title || 'Servicio a domicilio')}
+                        </div>
+                        {config.deliveryInfo.phones && config.deliveryInfo.phones.length > 0 && (
+                            <div className="flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm font-bold">
+                                {config.deliveryInfo.phones.map((phone, i) => (
+                                    <a
+                                        key={i}
+                                        href={`tel:${phone.replace(/\s+/g, '')}`}
+                                        className="hover:underline"
+                                        style={customColors ? { color: customColors.text } : undefined}
+                                    >
+                                        📞 {phone}
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+                        {(config.deliveryInfo.address || config.deliveryInfo.zones) && (
+                            <div className="text-[11px] opacity-75">
+                                {config.deliveryInfo.address}{config.deliveryInfo.address && config.deliveryInfo.zones ? ' · ' : ''}{config.deliveryInfo.zones}
+                            </div>
+                        )}
+                    </div>
+                )}
                 
                 {/* Fecha Actual Localizada */}
                 <div className="flex items-center justify-center gap-2 mb-4 sm:mb-8 opacity-60">
@@ -397,7 +502,7 @@ const ClienteApp: React.FC = () => {
                     ))}
                 </div>
 
-                {config.name.toLowerCase().includes('kanala') ? null : (
+                {!showTabs ? null : (
                     <div className="bg-slate-100/80 p-1 rounded-2xl flex gap-1 mb-4 sm:mb-10 shadow-inner max-w-lg mx-auto">
                         {[{ id: 'menu', label: t.menuDelDia, icon: IconMenu }, { id: 'carta', label: t.carta, icon: IconBook }, { id: 'raciones', label: t.raciones, icon: IconFood }].map(tab => (
                             <button 
@@ -412,7 +517,14 @@ const ClienteApp: React.FC = () => {
                 )}
 
                 <div className="flex justify-center mb-1">
-                    <button onClick={() => setShowAllergens(!showAllergens)} className={`text-[11px] sm:text-sm font-bold px-6 py-2 rounded-full flex items-center gap-2 shadow-sm border transition-all ${showAllergens ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+                    <button
+                        onClick={() => setShowAllergens(!showAllergens)}
+                        className={`text-[11px] sm:text-sm font-bold px-6 py-2 rounded-full flex items-center gap-2 shadow-sm border transition-all ${
+                            isCustomDark
+                                ? (showAllergens ? 'bg-amber-400 text-neutral-950 border-amber-400' : 'bg-neutral-800/90 text-white border-white/20 hover:bg-neutral-700')
+                                : (showAllergens ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50')
+                        }`}
+                    >
                         <IconAllergy className="w-4 h-4 sm:w-6 sm:h-6" /> {showAllergens ? t.ocultarAlergenos : t.mostrarAlergenos}
                     </button>
                 </div>
@@ -421,18 +533,18 @@ const ClienteApp: React.FC = () => {
             {renderAllergenLegend()}
 
             <main
-                className={`p-3 sm:p-12 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border relative min-h-[500px] overflow-hidden ${config.name.toLowerCase().includes('kanala') ? 'bg-neutral-900 border-white/10' : 'bg-white border-slate-100'}`}
+                className={`p-3 sm:p-12 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border relative min-h-[500px] overflow-hidden ${isKanala ? 'bg-neutral-900 border-white/10' : 'bg-white border-slate-100'}`}
                 style={customColors ? { backgroundColor: customColors.surface, color: customColors.text, borderColor: `${customColors.accent}40` } : undefined}
             >
                 <div
                     className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${styles.gradient} opacity-50`}
                     style={customColors ? { background: customColors.accent, opacity: 0.9 } : undefined}
                 ></div>
-                {(!config.name.toLowerCase().includes('kanala') && view === 'menu') ? renderMenu() : renderCartaOrRaciones()}
-                <footer className={`mt-12 sm:mt-20 pt-6 border-t text-center text-[11px] sm:text-[12px] font-black ${config.name.toLowerCase().includes('kanala') ? 'border-white/10 text-white/20' : 'border-slate-50 text-slate-300'}`}>
+                {(showTabs && view === 'menu') ? renderMenu() : renderCartaOrRaciones()}
+                <footer className={`mt-12 sm:mt-20 pt-6 border-t text-center text-[11px] sm:text-[12px] font-black ${isDarkTheme ? 'border-white/10 text-white/30' : 'border-slate-50 text-slate-300'}`}>
                     <div className="uppercase tracking-widest mb-4">{t.ivaYDatos}</div>
                     {config.officialWebsite && (
-                        <a href={config.officialWebsite} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border transition-all hover:scale-105 ${config.name.toLowerCase().includes('kanala') ? 'border-white/20 text-white/50 hover:text-white hover:border-white/40' : 'border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300'}`}>
+                        <a href={config.officialWebsite} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border transition-all hover:scale-105 ${isDarkTheme ? 'border-white/20 text-white/60 hover:text-white hover:border-white/40' : 'border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300'}`}>
                             <svg width="14" height="14" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                             {t.visitarWeb}
                         </a>

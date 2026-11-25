@@ -36,6 +36,7 @@ const gestionQR = readText('components/gestion/GestionQR.tsx') || '';
 const factoryDashboard = readText('components/factory/FactoryDashboard.tsx') || '';
 const appTsx = readText('App.tsx') || '';
 const apiTs = readText('services/api.ts') || '';
+const serverTs = readText('server.ts') || '';
 
 // 2. Logos en todas las vistas
 check(
@@ -90,14 +91,15 @@ check(
         clienteApp.includes('allergenColors')
 );
 
-// 7. Reglas de traducción IA (5 idiomas obligatorios + diccionario Kanala + Elhuyar)
+// 7. Reglas de traducción IA en servidor (5 idiomas obligatorios + diccionario Kanala + Elhuyar)
 const kanalaDictExists = fs.existsSync(path.join(root, 'src', 'data', 'kanala_dictionary.json'));
 check(
-    'Esquema de traducción IA exige los 5 idiomas (EU, EN, FR, DE, IT), diccionario Kanala y Elhuyar',
+    'Esquema de traducción IA en servidor exige los 5 idiomas (EU, EN, FR, DE, IT), diccionario Kanala y Elhuyar',
     kanalaDictExists &&
-        apiTs.includes('required: ["EU", "EN", "FR", "DE", "IT"]') &&
-        apiTs.includes('Elhuyar') &&
-        apiTs.includes('kanalaDictionary')
+        serverTs.includes('required: ["EU", "EN", "FR", "DE", "IT"]') &&
+        serverTs.includes('Elhuyar') &&
+        serverTs.includes('kanalaDictionary') &&
+        !apiTs.includes('@google/genai')
 );
 
 // 8. Enlace a Web Oficial en Panel Maestro y Cliente

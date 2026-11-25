@@ -40,7 +40,8 @@ const allergenColors: Record<string, string> = {
 const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = ({ mode, setView }) => {
     const { config } = useConfig();
     const isKanala = config.name.toLowerCase().includes('kanala');
-    const tc = isKanala ? {
+    const isDarkTheme = isKanala || Boolean(config.theme?.customColors?.isDark);
+    const tc = isDarkTheme ? {
         bg: 'bg-neutral-900',
         cardBg: 'bg-neutral-800',
         text: 'text-white',
@@ -159,13 +160,16 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
     }, [platos, mode]);
 
     const sortedKeys = useMemo(() => {
-        const order = ['PRIMERO', 'SEGUNDO', 'ENTRANTE', 'ENSALADA', 'ARROZ', 'MARISCO', 'PESCADO', 'CARNE', 'POSTRE'];
+        const customOrder = Array.isArray(config.sectionOrder) ? config.sectionOrder : [];
+        const defaultOrder = ['PRIMERO', 'SEGUNDO', 'ENTRANTE', 'ENSALADA', 'ARROZ', 'MARISCO', 'PESCADO', 'CARNE', 'POSTRE'];
+        const order = customOrder.length > 0 ? [...customOrder, ...defaultOrder] : defaultOrder;
         return Object.keys(groupedPlatos).sort((a, b) => {
             const ia = order.indexOf(a);
             const ib = order.indexOf(b);
-            return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+            if (ia === -1 && ib === -1) return 0;
+            return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
         });
-    }, [groupedPlatos]);
+    }, [groupedPlatos, config.sectionOrder]);
     
     const defaultExpanded = false;
 
@@ -306,19 +310,19 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
         
         return (
             <div className="sticky top-[68px] z-30 -mx-2 sm:-mx-4 mb-4 animate-fade-in">
-                <div className={`backdrop-blur-md border-t border-b-4 shadow-md py-2 px-4 sm:px-6 ${isKanala ? 'bg-neutral-900/95 border-white/10 border-b-neutral-800' : 'bg-white/95 border-slate-200 border-b-slate-300'}`}>
+                <div className={`backdrop-blur-md border-t border-b-4 shadow-md py-2 px-4 sm:px-6 ${isDarkTheme ? 'bg-neutral-900/95 border-white/10 border-b-neutral-800' : 'bg-white/95 border-slate-200 border-b-slate-300'}`}>
                     <div className="max-w-5xl mx-auto flex flex-col gap-1">
                         <div className="flex justify-between items-center px-1 mb-1">
-                            <p className={`text-[9px] sm:text-xs font-black uppercase tracking-[0.2em] ${isKanala ? 'text-neutral-400' : 'text-slate-400'}`}>{t.infoAlergenos}</p>
+                            <p className={`text-[9px] sm:text-xs font-black uppercase tracking-[0.2em] ${isDarkTheme ? 'text-neutral-400' : 'text-slate-400'}`}>{t.infoAlergenos}</p>
                             <div className="flex items-center gap-2">
                                 {selectedAllergens.length > 0 && (
-                                    <button onClick={() => setSelectedAllergens([])} className={`text-[9px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm transition-colors ${isKanala ? 'bg-white text-black hover:bg-neutral-200' : 'bg-slate-800 text-white hover:bg-slate-700'}`}>
+                                    <button onClick={() => setSelectedAllergens([])} className={`text-[9px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm transition-colors ${isDarkTheme ? 'bg-white text-black hover:bg-neutral-200' : 'bg-slate-800 text-white hover:bg-slate-700'}`}>
                                         <IconX width={8} height={8}/> LIMPIAR
                                     </button>
                                 )}
                                 <button 
                                     onClick={() => setShowAllergens(false)} 
-                                    className={`transition-colors p-1 rounded-full ${isKanala ? 'text-neutral-400 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'}`}
+                                    className={`transition-colors p-1 rounded-full ${isDarkTheme ? 'text-neutral-400 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'}`}
                                     title={t.ocultarAlergenos}
                                 >
                                     <IconX width={14} height={14} />
@@ -332,10 +336,10 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                                     <button 
                                         key={key} 
                                         onClick={() => setSelectedAllergens(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])}
-                                        className={`flex items-center gap-1 transition-all duration-200 rounded-md px-1.5 py-0.5 border ${isKanala ? (isSelected ? 'bg-neutral-700 border-white shadow-sm ring-1 ring-neutral-600 z-10' : 'bg-transparent border-white/20 hover:border-white/40') : (isSelected ? 'bg-white border-slate-800 shadow-sm ring-1 ring-slate-200 z-10' : 'bg-white/40 border-slate-100 hover:border-slate-300')}`}
+                                        className={`flex items-center gap-1 transition-all duration-200 rounded-md px-1.5 py-0.5 border ${isDarkTheme ? (isSelected ? 'bg-neutral-700 border-white shadow-sm ring-1 ring-neutral-600 z-10' : 'bg-transparent border-white/20 hover:border-white/40') : (isSelected ? 'bg-white border-slate-800 shadow-sm ring-1 ring-slate-200 z-10' : 'bg-white/40 border-slate-100 hover:border-slate-300')}`}
                                     >
                                         <span className={`w-2 h-2 rounded-full flex-shrink-0 ${allergenColors[key] || 'bg-gray-400'}`}></span>
-                                        <span className={`text-[9px] font-bold uppercase whitespace-nowrap tracking-tight ${isSelected ? (isKanala ? 'text-white' : 'text-slate-900') : (isKanala ? 'text-neutral-400' : 'text-slate-500')}`}>{t.alergenos?.[key] || key}</span>
+                                        <span className={`text-[9px] font-bold uppercase whitespace-nowrap tracking-tight ${isSelected ? (isDarkTheme ? 'text-white' : 'text-slate-900') : (isDarkTheme ? 'text-neutral-400' : 'text-slate-500')}`}>{t.alergenos?.[key] || key}</span>
                                     </button>
                                 );
                             })}
@@ -361,11 +365,11 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                 <div className="flex items-center gap-3">
                     {!(isKanala && mode === 'ALL') ? (
                         <button onClick={() => setView('home')} className="flex items-center gap-2 group text-left transition-colors">
-                            <div className={`p-2 rounded-full transition-colors ${isKanala ? 'bg-neutral-800 group-hover:bg-neutral-700 text-neutral-300' : 'bg-slate-100 group-hover:bg-slate-200 text-slate-600'}`}>
+                            <div className={`p-2 rounded-full transition-colors ${isDarkTheme ? 'bg-neutral-800 group-hover:bg-neutral-700 text-neutral-300' : 'bg-slate-100 group-hover:bg-slate-200 text-slate-600'}`}>
                                 <IconChevronLeft className="w-6 h-6" />
                             </div>
-                            <h2 className={`text-xl sm:text-2xl font-bold font-lora capitalize transition-colors ${isKanala ? 'text-white' : 'text-slate-800 group-hover:text-slate-900'}`}>
-                                {mode === 'raciones' ? 'Gestión Raciones' : mode === 'carta' ? 'Carta Principal' : (translations['ES']?.tipos as any)?.[mode] || mode}
+                            <h2 className={`text-xl sm:text-2xl font-bold font-lora capitalize transition-colors ${isDarkTheme ? 'text-white' : 'text-slate-800 group-hover:text-slate-900'}`}>
+                                {mode === 'raciones' ? 'Gestión Raciones' : (mode === 'carta' || mode === 'ALL') ? 'Carta Principal' : (translations['ES']?.tipos as any)?.[mode] || mode}
                             </h2>
                         </button>
                     ) : (
@@ -397,12 +401,12 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                     >
                         {isReanalyzing ? `Analizando... ${reanalyzeProgress}%` : confirmReanalyze ? '¿Confirmar acción?' : 'Re-analizar / Traducir'}
                     </button>
-                    <button onClick={() => setShowAllergens(!showAllergens)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-sm ${showAllergens ? (isKanala ? 'bg-white text-black border-white' : 'bg-slate-800 text-white border-slate-800') : (isKanala ? 'bg-transparent text-white border-white/20 hover:bg-white/5' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50')}`}>
+                    <button onClick={() => setShowAllergens(!showAllergens)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-sm ${showAllergens ? (isDarkTheme ? 'bg-white text-black border-white' : 'bg-slate-800 text-white border-slate-800') : (isDarkTheme ? 'bg-transparent text-white border-white/20 hover:bg-white/5' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50')}`}>
                         <IconAllergy className="w-4 h-4" /> {showAllergens ? t.ocultarAlergenos : t.mostrarAlergenos}
                     </button>
                     <button 
                         onClick={() => toggleAll(allCollapsed)} 
-                        className={`text-[10px] font-black uppercase border px-2 py-1.5 rounded-lg transition-colors ${isKanala ? 'text-neutral-400 border-white/20 hover:bg-white/5' : 'text-slate-400 border-slate-200 hover:bg-slate-50'}`}
+                        className={`text-[10px] font-black uppercase border px-2 py-1.5 rounded-lg transition-colors ${isDarkTheme ? 'text-neutral-400 border-white/20 hover:bg-white/5' : 'text-slate-400 border-slate-200 hover:bg-slate-50'}`}
                     >
                         {allCollapsed ? 'Expandir todo' : 'Colapsar todo'}
                     </button>
@@ -418,7 +422,7 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                     <a 
                         href="/copia_seguridad/copia_completa_v1_v2.zip" 
                         download="copia_completa_v1_v2.zip" 
-                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow transition-colors border ${isKanala ? 'bg-neutral-800 text-emerald-400 hover:text-white border-white/20 hover:bg-neutral-700' : 'bg-white text-emerald-600 hover:text-emerald-700 border-slate-200 hover:bg-slate-50'}`}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow transition-colors border ${isDarkTheme ? 'bg-neutral-800 text-emerald-400 hover:text-white border-white/20 hover:bg-neutral-700' : 'bg-white text-emerald-600 hover:text-emerald-700 border-slate-200 hover:bg-slate-50'}`}
                         title="Descargar Copia de Seguridad Completa (ZIP con todo el código y reglas)"
                     >
                         💾 Copia
@@ -435,17 +439,17 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                 {sortedKeys.map(key => {
                     const isExpanded = expandedCats[key] ?? defaultExpanded;
                     return (
-                        <div key={key} className={`rounded-xl shadow-sm border transition-all relative ${tc.cardBg} ${isKanala ? "border-white/10" : "border-slate-100"}`}>
-                            <div className={`sticky top-[64px] sm:top-[68px] z-20 backdrop-blur-sm border-b shadow-sm transition-colors rounded-t-xl ${isKanala ? "bg-neutral-800/95 border-white/10 hover:bg-neutral-700/95" : "bg-slate-50/95 border-slate-200 hover:bg-slate-100/95"}`}>
+                        <div key={key} className={`rounded-xl shadow-sm border transition-all relative ${tc.cardBg} ${isDarkTheme ? "border-white/10" : "border-slate-100"}`}>
+                            <div className={`sticky top-[64px] sm:top-[68px] z-20 backdrop-blur-sm border-b shadow-sm transition-colors rounded-t-xl ${isDarkTheme ? "bg-neutral-800/95 border-white/10 hover:bg-neutral-700/95" : "bg-slate-50/95 border-slate-200 hover:bg-slate-100/95"}`}>
                                 <button 
                                     onClick={() => toggleCat(key)}
                                     className="w-full flex items-center px-4 py-3 gap-2 group relative"
                                 >
                                     <div className="p-1.5 w-[28px] flex-shrink-0"></div>
                                     <div className={`${mode === 'carta' ? 'w-[35%]' : 'flex-grow'} min-w-0 flex items-center gap-2 text-left`}>
-                                        <span className={`w-2 h-2 rounded-full transition-colors ${isExpanded ? 'bg-amber-400 shadow-sm' : (isKanala ? 'bg-neutral-600' : 'bg-slate-300')}`}></span>
+                                        <span className={`w-2 h-2 rounded-full transition-colors ${isExpanded ? 'bg-amber-400 shadow-sm' : (isDarkTheme ? 'bg-neutral-600' : 'bg-slate-300')}`}></span>
                                         <h3 className={`text-xs font-bold uppercase tracking-wider truncate ${tc.text}`}>
-                                            {(t.tipos as any)[key] || (key === 'PRIMERO' ? t.primerosPlatos : key === 'SEGUNDO' ? t.segundosPlatos : key)}
+                                            {config.sectionTranslations?.[key]?.['ES'] || (t.tipos as any)[key] || (key === 'PRIMERO' ? t.primerosPlatos : key === 'SEGUNDO' ? t.segundosPlatos : key)}
                                             <span className="text-[10px] opacity-40 ml-1">({groupedPlatos[key].length})</span>
                                         </h3>
                                     </div>
@@ -465,8 +469,8 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                                 </button>
                             </div>
                             
-                            <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0 invisible overflow-hidden'}`}>
-                                <div className={`divide-y ${isKanala ? 'divide-white/5' : 'divide-slate-50'}`}>
+                            <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[6000px] opacity-100' : 'max-h-0 opacity-0 invisible overflow-hidden'}`}>
+                                <div className={`divide-y ${isDarkTheme ? 'divide-white/5' : 'divide-slate-50'}`}>
                                     {groupedPlatos[key].map((p) => {
                                         const allergensToDisplay = (() => {
                                             if (!p.Alergenos || !Array.isArray(p.Alergenos)) return [];
@@ -488,19 +492,19 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                                         return (
                                             <div 
                                                 key={p.ID_Plato} 
-                                                className={`flex items-center px-4 py-2.5 transition-colors gap-2 group ${isKanala ? "hover:bg-white/5" : "hover:bg-slate-50/50"} ${draggedItem?.ID_Plato === p.ID_Plato ? 'opacity-50 bg-blue-50' : ''} ${isRestricted ? 'opacity-50 grayscale' : ''}`}
+                                                className={`flex items-center px-4 py-2.5 transition-colors gap-2 group ${isDarkTheme ? "hover:bg-white/5" : "hover:bg-slate-50/50"} ${draggedItem?.ID_Plato === p.ID_Plato ? 'opacity-50 bg-blue-50' : ''} ${isRestricted ? 'opacity-50 grayscale' : ''}`}
 
                                             >
                                                 <div className="flex flex-col items-center justify-center -ml-2 mr-1">
-                                                    <button onClick={(e) => movePlatoUp(e, p)} className={`p-1 rounded transition-colors ${isKanala ? 'text-neutral-500 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'}`}>
+                                                    <button onClick={(e) => movePlatoUp(e, p)} className={`p-1 rounded transition-colors ${isDarkTheme ? 'text-neutral-500 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'}`}>
                                                         <IconArrowUp width={18} height={18} />
                                                     </button>
-                                                    <button onClick={(e) => movePlatoDown(e, p)} className={`p-1 rounded transition-colors ${isKanala ? 'text-neutral-500 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'}`}>
+                                                    <button onClick={(e) => movePlatoDown(e, p)} className={`p-1 rounded transition-colors ${isDarkTheme ? 'text-neutral-500 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'}`}>
                                                         <IconArrowDown width={18} height={18} />
                                                     </button>
                                                 </div>
                                                 <div className={`${mode === 'carta' ? 'w-[35%]' : 'flex-grow'} min-w-0`}>
-                                                    <p className={`text-sm font-medium leading-snug truncate ${isRestricted ? (isKanala ? 'text-neutral-500 line-through decoration-neutral-600' : 'text-slate-500 line-through decoration-slate-400') : tc.text}`}>{p.ES_Nombre}</p>
+                                                    <p className={`text-sm font-medium leading-snug truncate ${isRestricted ? (isDarkTheme ? 'text-neutral-500 line-through decoration-neutral-600' : 'text-slate-500 line-through decoration-slate-400') : tc.text}`}>{p.ES_Nombre}</p>
                                                     {(showAllergens || isRestricted) && hasAllergens && (
                                                         <div className="flex flex-row items-center gap-1 mt-1">
                                                             {allergensToDisplay.map((a: any) => (
@@ -518,7 +522,7 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                                                         <select 
                                                             value={p.Rol_Menu || "NO"} 
                                                             onChange={(e) => handleRolChange(p.ID_Plato, e.target.value)} 
-                                                            className={`text-xs font-bold uppercase rounded-md py-1.5 px-2 border focus:border-blue-400 focus:ring-1 focus:ring-blue-400 cursor-pointer transition-all appearance-none text-center w-full max-w-[160px] truncate shadow-sm ${p.Rol_Menu ? 'bg-blue-50 text-blue-700 border-blue-200' : (isKanala ? 'bg-neutral-900 text-white border-white/20 hover:border-white/40' : 'bg-white text-slate-600 border-slate-300 hover:text-slate-800 hover:bg-slate-50')}`}
+                                                            className={`text-xs font-bold uppercase rounded-md py-1.5 px-2 border focus:border-blue-400 focus:ring-1 focus:ring-blue-400 cursor-pointer transition-all appearance-none text-center w-full max-w-[160px] truncate shadow-sm ${p.Rol_Menu ? 'bg-blue-50 text-blue-700 border-blue-200' : (isDarkTheme ? 'bg-neutral-900 text-white border-white/20 hover:border-white/40' : 'bg-white text-slate-600 border-slate-300 hover:text-slate-800 hover:bg-slate-50')}`}
                                                         >
                                                             <option value="NO">{(t.tipos as any)[p.Tipo]?.toUpperCase() || p.Tipo}</option>
                                                             <option value="PRIMERO">PRIMER PLATO</option>
@@ -529,7 +533,7 @@ const GestionCategoria: React.FC<{ mode: string; setView: (v: any) => void }> = 
                                                 )}
                                                 <div className={`flex items-center gap-3 flex-shrink-0 justify-end`}>
                                                     {mode !== 'menu' && <EditablePrice price={p.Precio} id={p.ID_Plato} onUpdate={refreshData} />}
-                                                    <button onClick={() => openEditModal(p)} className={`p-1.5 rounded-full transition-colors ${isKanala ? "text-neutral-400 hover:text-white hover:bg-white/10" : "text-slate-700 hover:text-blue-600 hover:bg-blue-50"}`}><IconEdit width={18} height={18}/></button>
+                                                    <button onClick={() => openEditModal(p)} className={`p-1.5 rounded-full transition-colors ${isDarkTheme ? "text-neutral-400 hover:text-white hover:bg-white/10" : "text-slate-700 hover:text-blue-600 hover:bg-blue-50"}`}><IconEdit width={18} height={18}/></button>
                                                     {mode === 'raciones' ? (
                                                         <div className="flex items-center gap-2">
                                                             <span className={`text-[9px] font-black uppercase tracking-tighter ${p.Es_Racion ? 'text-emerald-600' : 'text-slate-300'}`}>Ración</span>

@@ -13,18 +13,25 @@ export const EditablePrice: React.FC<EditablePriceProps> = ({ price, id, onUpdat
     const [isEditing, setIsEditing] = useState(false);
     const [val, setVal] = useState(typeof price === 'number' ? price.toFixed(2) : String(price));
     const { config } = useConfig();
-    const isKanala = config?.name?.toLowerCase().includes('kanala') || false;
+    const isDarkTheme = config?.name?.toLowerCase().includes('kanala') || Boolean(config?.theme?.customColors?.isDark);
 
     useEffect(() => setVal(typeof price === 'number' ? price.toFixed(2) : String(price)), [price]);
 
     const save = async () => {
         setIsEditing(false);
-        const num = parseFloat(val.replace(',', '.')); // Permitir comas
-        if (!isNaN(num) && num !== price) {
+        const trimmed = val.trim();
+        let nextVal: number | string | null = null;
+        if (trimmed.includes('/')) {
+            nextVal = trimmed;
+        } else {
+            const num = parseFloat(trimmed.replace(/€/g, '').replace(',', '.'));
+            if (!isNaN(num)) nextVal = num;
+        }
+        if (nextVal !== null && nextVal !== price) {
             if (onSave) {
-                await onSave(num);
+                await onSave(nextVal);
             } else if (id !== undefined) {
-                await api.updatePlato(id, { Precio: num });
+                await api.updatePlato(id, { Precio: nextVal });
             }
             onUpdate();
         } else {
@@ -40,16 +47,15 @@ export const EditablePrice: React.FC<EditablePriceProps> = ({ price, id, onUpdat
         return (
             <input 
                 autoFocus 
-                type="number" 
-                step="0.01" 
+                type="text" 
                 value={val} 
                 onChange={e => setVal(e.target.value)} 
                 onFocus={(e) => e.target.select()}
                 onBlur={save} 
                 onKeyDown={handleKeyDown}
-                className={`w-20 px-1 py-0.5 text-sm font-bold border-2 rounded shadow-sm focus:outline-none ${isKanala ? "text-white bg-neutral-900 border-white/50" : "text-black bg-white border-blue-400"}`} 
+                className={`w-24 px-1.5 py-0.5 text-sm font-bold border-2 rounded shadow-sm focus:outline-none ${isDarkTheme ? "text-white bg-neutral-900 border-white/50" : "text-black bg-white border-blue-400"}`} 
             />
         );
     }
-    return <span onClick={() => setIsEditing(true)} className={`cursor-pointer border px-2 py-1 rounded-md transition-colors shadow-sm text-sm font-medium ${isKanala ? "border-white/20 bg-neutral-900 text-white hover:border-white/60 hover:bg-white/10" : "border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"}`}>{typeof price === 'number' ? `€${price.toFixed(2)}` : price}</span>;
+    return <span onClick={() => setIsEditing(true)} className={`cursor-pointer border px-2 py-1 rounded-md transition-colors shadow-sm text-sm font-medium whitespace-nowrap ${isDarkTheme ? "border-white/20 bg-neutral-900 text-white hover:border-white/60 hover:bg-white/10" : "border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"}`}>{typeof price === 'number' ? `€${price.toFixed(2)}` : price}</span>;
 };
