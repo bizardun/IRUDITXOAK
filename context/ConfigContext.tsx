@@ -10,6 +10,7 @@ interface ConfigContextType {
     availableApps: RestaurantConfig[];
     loadApp: (id: string) => void;
     updateAppConfig: (updates: Partial<RestaurantConfig>) => Promise<void>;
+    updateAppById: (id: string, updates: Partial<RestaurantConfig>) => Promise<void>;
     createApp: (name: string, prompt: string, fileData: string | null, mimeType: string | null, theme: ThemeConfig) => Promise<void>;
     deleteApp: (id: string) => void;
     enterFactory: () => void;
@@ -208,6 +209,22 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     };
 
+    const updateAppById = async (id: string, updates: Partial<RestaurantConfig>) => {
+        try {
+            const target = availableApps.find(a => a.id === id);
+            if (!target) return;
+            const updated = { ...target, ...updates };
+            await api.saveApp(updated, false);
+            setAvailableApps(prev => prev.map(a => a.id === id ? updated : a));
+            if (config.id === id) {
+                setConfigState(updated);
+            }
+        } catch (e) {
+            console.error("Error updating app by id:", e);
+            throw e;
+        }
+    };
+
     if (isInitializing && !isMasterAdmin)
  return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><div className="animate-pulse flex flex-col items-center gap-4"><div className="w-12 h-12 border-4 border-slate-700 border-t-white rounded-full animate-spin"></div><p className="text-slate-400 font-medium">Cargando restaurante...</p></div></div>;
 
@@ -219,6 +236,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             availableApps,
             loadApp,
             updateAppConfig,
+            updateAppById,
             createApp,
             deleteApp,
             enterFactory: () => setIsFactoryMode(true),

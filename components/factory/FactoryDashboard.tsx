@@ -20,7 +20,7 @@ export default function FactoryDashboard() {
     const isAiStudioEditor = typeof window !== 'undefined' && window.self !== window.top;
     const [isUnlocked, setIsUnlocked] = useState(isAiStudioEditor);
     const [password, setPassword] = useState('');
-    const { availableApps, loadApp, createApp, deleteApp, exitFactory } = useConfig();
+    const { availableApps, loadApp, updateAppById, createApp, deleteApp, exitFactory } = useConfig();
     const [newName, setNewName] = useState('');
     const [prompt, setPrompt] = useState('');
     
@@ -129,14 +129,9 @@ export default function FactoryDashboard() {
     
     const savePassword = async () => {
         if (!passwordApp) return;
-        const updatedApp = { ...passwordApp, adminPassword: newAdminPassword };
-        // Save to DB
-        
-        await api.saveApp(updatedApp);
-        // Refresh apps list would be ideal, but we can just update local state or just close
+        const cleanPass = newAdminPassword.trim() || '1234';
+        await updateAppById(passwordApp.id, { adminPassword: cleanPass });
         setPasswordApp(null);
-        // Note: The useConfig context should ideally provide a way to update, but we just trigger a save via API directly and the context might not auto-refresh. For simplicity, we just reload window or rely on the user to understand it's saved.
-        alert('Contraseña guardada correctamente.');
     };
 
     const handleWebsiteClick = (e: React.MouseEvent, app: RestaurantConfig) => {
@@ -147,10 +142,8 @@ export default function FactoryDashboard() {
 
     const saveWebsite = async () => {
         if (!websiteApp) return;
-        const updatedApp = { ...websiteApp, officialWebsite: newWebsite };
-        await api.saveApp(updatedApp);
+        await updateAppById(websiteApp.id, { officialWebsite: newWebsite.trim() });
         setWebsiteApp(null);
-        alert('Web oficial guardada correctamente.');
     };
 
     const closeShare = () => { setSharingApp(null); setCopiedClient(false); setCopiedAdmin(false); };

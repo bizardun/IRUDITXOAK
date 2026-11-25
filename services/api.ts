@@ -56,14 +56,17 @@ export const translateText = async (text: string, targetLang: string, targetLang
     try {
         const isBasque = targetLang === 'EU';
         const systemPrompt = `You are a professional restaurant translator and culinary expert.
-        Translate from Spanish to ${targetLangName}. 
-        Focus on culinary accuracy, cultural localization, and appetizing descriptions.
+        Translate the Spanish dish name or culinary text completely into natural, idiomatic ${targetLangName}.
+        CRITICAL RULES:
+        - NEVER leave Spanish words untranslated (except proper nouns/brands/places like Joselito, Kanala, Wagyu, Idiazabal, Josper, Navarra, Huelva).
+        - Use authentic restaurant menu terminology in ${targetLangName} (for Italian and German, write natural fine-dining menu names that native Italian/German diners immediately understand).
+        - Preserve dietary notes like "(sin gluten)" translated properly ("(senza glutine)" in Italian, "(glutenfrei)" in German, "(gluten-free)" in English, "(sans gluten)" in French).
         ${isBasque ? "CRITICAL: For Basque (EU) translations, you MUST verify terminology using the Elhuyar Dictionary (https://www.euskadi.eus/diccionario-elhuyar/) to ensure academic correctness." : ""}
-        Respond ONLY with the translated text.`;
+        Respond ONLY with the translated text, no quotes or commentary.`;
 
         const response = await ai.models.generateContent({
             model: 'gemini-4-hydrogen',
-            contents: `Translate "${text}" to ${targetLangName}.`,
+            contents: `Translate this Spanish menu item into ${targetLangName}: "${text}"`,
             config: { 
                 systemInstruction: systemPrompt,
                 tools: isBasque ? [{ googleSearch: {} }] : undefined
@@ -92,6 +95,7 @@ export const analyzeDish = async (dishName: string, dishDescription?: string): P
 
     const currentConfig = getActiveConfig();
     let websiteSearchRule = "";
+    let kanalaExactMatch: any = null;
     if (currentConfig.officialWebsite) {
         let baseUrl = currentConfig.officialWebsite.trim();
         if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
@@ -100,15 +104,22 @@ export const analyzeDish = async (dishName: string, dishDescription?: string): P
         // Consulta prioritaria de base de conocimiento local para Kanala o cualquier app configurada
         if (baseUrl.includes('kanalabeach')) {
             const normalizedDishName = dishName.trim().toLowerCase();
-            const match = kanalaDictionary.find((d: any) => d.plato_es.toLowerCase() === normalizedDishName);
+            const strippedDishName = normalizedDishName.replace(/\s*\(.*?\)\s*/g, '').trim();
+            const match = kanalaDictionary.find((d: any) =>
+                d.plato_es && (
+                    d.plato_es.toLowerCase() === normalizedDishName ||
+                    d.plato_es.toLowerCase() === strippedDishName
+                )
+            );
             if (match) {
+                kanalaExactMatch = match;
                 exactMatchStr = `
         WE FOUND THE OFFICIAL RESTAURANT TRANSLATIONS IN THE LOCAL KNOWLEDGE BASE FOR THIS EXACT DISH. YOU MUST USE THESE EXACT STRINGS WITHOUT INVENTING ANYTHING NEW:
         - Basque (EU): "${match.plato_eu}"
         - English (EN): "${match.plato_en}"
         - French (FR): "${match.plato_fr}"
         For these 3 languages, DO NOT perform a web search. Just output those exact strings.
-        For German (DE) and Italian (IT), generate the translation yourself.`;
+        For German (DE) and Italian (IT), you MUST generate complete, idiomatic, high-end restaurant menu translations (NEVER leave DE or IT empty or untranslated).`;
             }
         }
 
@@ -128,10 +139,23 @@ export const analyzeDish = async (dishName: string, dishDescription?: string): P
         Analyze the Spanish Dish Name and optional Ingredients/Description provided.
         
         CRITICAL TRANSLATION RULES:
-        1. Translate the dish name to: EU (Basque), EN (English), FR (French), DE (German), IT (Italian).
+        1. You MUST translate the dish name completely into ALL FIVE languages: EU (Basque), EN (English), FR (French), DE (German), IT (Italian). Every single key (EU, EN, FR, DE, IT) MUST be a non-empty string.
         ${websiteSearchRule}
         3. For EU (Basque), if it's not already on the restaurant's official website or knowledge base, you MUST strictly search and cross-reference with the Elhuyar Hiztegia (https://www.euskadi.eus/diccionario-elhuyar/) using Google Search to ensure authentic, grammatically correct Euskera.
-        4. For EN, FR, DE, IT: Generate natural, enticing, professional restaurant menu names (avoid clumsy literal machine translations).
+        4. CRITICAL FOR ITALIAN (IT) AND GERMAN (DE) (as well as EN and FR):
+           - NEVER leave IT or DE empty, partial, or with untranslated Spanish words (except proper nouns/brands/origins like Joselito, Kanala, Wagyu, Idiazabal, Josper, Navarra, Huelva, Angus, Burger).
+           - Translate every ingredient, cooking method, and note naturally into idiomatic fine-dining Italian and German:
+             * "a la brasa" -> IT: "alla brace", DE: "vom Holzkohlegrill" / "gegrillt"
+             * "a baja temperatura" -> IT: "a bassa temperatura", DE: "bei Niedrigtemperatur gegart"
+             * "arroz meloso" -> IT: "Riso cremoso", DE: "Cremiger Reis"
+             * "sin gluten" -> IT: "(senza glutine)", DE: "(glutenfrei)"
+             * "rebozada/o" -> IT: "impanato/a", DE: "paniert"
+             * "ración" -> IT: "(Porzione)", DE: "(Portion)"
+             * "kokotxas" -> IT: "Guance di nasello (Kokotxas)", DE: "Seehecht-Bäckchen (Kokotxas)"
+             * "zamburiñas" -> IT: "Canestrelli", DE: "Kleine Jakobsmuscheln"
+             * "piparras" -> IT: "peperoncini baschi (piparras)", DE: "baskische Peperoni (Piparras)"
+             * "ajetes" -> IT: "aglietti freschi", DE: "junger Knoblauch"
+           - Use proper Italian and German spelling and accents (e.g., "iberico", not "ibérico" in Italian).
 
         CRITICAL EU ALLERGEN RULES (Regulation EU 1169/2011):
         Detect ALL allergens present in the standard culinary recipe and the stated ingredients from this list ONLY: ${allergenList.join(', ')}.
@@ -175,13 +199,15 @@ export const analyzeDish = async (dishName: string, dishDescription?: string): P
                                 FR: { type: Type.STRING },
                                 DE: { type: Type.STRING },
                                 IT: { type: Type.STRING }
-                            }
+                            },
+                            required: ["EU", "EN", "FR", "DE", "IT"]
                         },
                         allergens: {
                             type: Type.ARRAY,
                             items: { type: Type.STRING }
                         }
-                    }
+                    },
+                    required: ["translations", "allergens"]
                 },
                 tools: [{ googleSearch: {} }]
             }
@@ -191,9 +217,27 @@ export const analyzeDish = async (dishName: string, dishDescription?: string): P
         if (!text) throw new Error("No response from AI");
         
         const result = JSON.parse(text);
+        const translationsResult: Record<string, string> = { ...(result.translations || {}) };
+
+        // Inyectar traducciones exactas del diccionario local oficial si existe coincidencia
+        if (kanalaExactMatch) {
+            if (kanalaExactMatch.plato_eu) translationsResult.EU = kanalaExactMatch.plato_eu;
+            if (kanalaExactMatch.plato_en) translationsResult.EN = kanalaExactMatch.plato_en;
+            if (kanalaExactMatch.plato_fr) translationsResult.FR = kanalaExactMatch.plato_fr;
+        }
+
+        // Red de seguridad: si algún idioma (especialmente IT o DE) vino vacío, traducirlo individualmente
+        const langNames: Record<string, string> = { EU: 'Basque', EN: 'English', FR: 'French', DE: 'German', IT: 'Italian' };
+        for (const code of ['EU', 'EN', 'FR', 'DE', 'IT']) {
+            if (!translationsResult[code] || !translationsResult[code].trim()) {
+                const fallback = await translateText(dishName, code, langNames[code]);
+                if (fallback.text) translationsResult[code] = fallback.text;
+            }
+        }
+
         return {
             ok: true,
-            translations: result.translations || {},
+            translations: translationsResult,
             allergens: Array.isArray(result.allergens) ? result.allergens : [],
             sources: extractSources(response)
         };
@@ -458,21 +502,21 @@ export default {
     translateText,
     analyzeDish,
     generateAppConfig, 
-    login: async (u: string, p: string) => {
-        const appId = _apiAppId || getActiveConfig().id;
+    login: async (u: string, p: string, explicitAppId?: string) => {
+        const appId = explicitAppId || _apiAppId || getActiveConfig().id;
         try {
             const snap = await getDoc(doc(db, 'restaurants', appId));
             if (snap.exists()) {
                 const appData = snap.data();
-                const expectedPass = appData.adminPassword || '1234';
-                if (u === 'admin' && p === expectedPass) return true;
+                const expectedPass = String(appData.adminPassword || '1234').trim();
+                if (u === 'admin' && p.trim() === expectedPass) return true;
             } else {
-                if (u === 'admin' && p === '1234') return true;
+                if (u === 'admin' && p.trim() === '1234') return true;
             }
         } catch(e) {
             console.error('Login error:', e);
         }
-        throw new Error('Credenciales incorrectas');
+        throw new Error('Contraseña incorrecta');
     }
 };
 

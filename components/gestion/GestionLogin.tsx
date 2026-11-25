@@ -1,51 +1,106 @@
 import React, { useState } from 'react';
 import api from '../../services/api';
+import { useConfig } from '../../context/ConfigContext';
 
 interface GestionLoginProps {
     onLogin: () => void;
 }
 
 const GestionLogin: React.FC<GestionLoginProps> = ({ onLogin }) => {
-    const [username, setUsername] = useState('admin');
-    const [password, setPassword] = useState('1234');
+    const { config } = useConfig();
+    const isKanala = config?.name?.toLowerCase().includes('kanala');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!password.trim()) {
+            setError('Introduce la contraseña de acceso.');
+            return;
+        }
         setLoading(true);
         setError('');
         try {
-            await api.login(username, password);
+            await api.login('admin', password.trim(), config.id);
             onLogin();
         } catch (err: any) {
-            setError(err.message || 'An unexpected error occurred.');
+            setError(err.message || 'Contraseña incorrecta.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
-            <div className="w-full max-w-sm p-8 bg-white rounded-lg shadow-md space-y-6">
-                <h1 className="text-2xl font-bold text-center text-gray-800">Daily Management</h1>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                     <div>
-                        <label className="text-sm font-medium text-gray-700">User</label>
-                        <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                    </div>
+        <div className={`flex items-center justify-center min-h-[80vh] p-4 ${isKanala ? 'bg-black text-white' : 'bg-slate-50 text-slate-800'}`}>
+            <div className={`w-full max-w-sm p-8 rounded-2xl shadow-xl border space-y-6 ${isKanala ? 'bg-neutral-900 border-white/15' : 'bg-white border-slate-200'}`}>
+                <div className="text-center space-y-3">
+                    {isKanala ? (
+                        <img
+                            src="https://www.kanalabeach.eus/wp-content/uploads/2024/06/kanala-logos_LOGO-HORIZONTAL-zuria.png"
+                            alt={config.name}
+                            className="h-12 mx-auto object-contain"
+                        />
+                    ) : (
+                        <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl mx-auto flex items-center justify-center border border-blue-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </div>
+                    )}
                     <div>
-                        <label className="text-sm font-medium text-gray-700">Password</label>
-                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
+                        <h1 className={`text-xl font-bold font-lora ${isKanala ? 'text-white' : 'text-slate-800'}`}>
+                            Acceso Propietario
+                        </h1>
+                        <p className={`text-xs mt-1 ${isKanala ? 'text-neutral-400' : 'text-slate-500'}`}>
+                            Panel de Gestión — {config.name}
+                        </p>
                     </div>
-                    {error && <p className="text-sm text-red-600">{error}</p>}
-                    <button type="submit" disabled={loading} className="w-full py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition-colors">
-                        {loading ? 'Logging in...' : 'Access'}
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isKanala ? 'text-neutral-300' : 'text-slate-600'}`}>
+                            Contraseña de gestión
+                        </label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={e => { setPassword(e.target.value); if (error) setError(''); }}
+                            placeholder="Introduce tu clave"
+                            autoFocus
+                            className={`w-full px-4 py-3 rounded-xl border text-center text-base tracking-widest outline-none transition-all ${
+                                isKanala
+                                    ? 'bg-neutral-800 border-white/20 text-white placeholder-neutral-500 focus:border-white'
+                                    : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+                            }`}
+                            required
+                        />
+                    </div>
+
+                    {error && (
+                        <p className="text-xs font-semibold text-red-500 text-center bg-red-500/10 border border-red-500/20 rounded-lg py-2 px-3">
+                            {error}
+                        </p>
+                    )}
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className={`w-full py-3 rounded-xl font-bold text-sm transition-all shadow-md disabled:opacity-50 ${
+                            isKanala
+                                ? 'bg-white text-black hover:bg-neutral-200'
+                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
+                    >
+                        {loading ? 'Verificando...' : 'Entrar a Gestión'}
                     </button>
                 </form>
             </div>
         </div>
     );
-}
+};
 
 export default GestionLogin;
+
