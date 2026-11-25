@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useConfig } from '../../context/ConfigContext';
-import { ThemeConfig, RestaurantConfig } from '../../types';
+import { ThemeConfig, RestaurantConfig, UploadedAppFile } from '../../types';
 import { generateRestaurantZip } from '../../services/zipService';
 import api from '../../services/api';
 
@@ -24,10 +24,11 @@ export default function FactoryDashboard() {
     const [newName, setNewName] = useState('');
     const [prompt, setPrompt] = useState('');
     
-    // File handling
-    const [fileData, setFileData] = useState<string | null>(null);
-    const [mimeType, setMimeType] = useState<string | null>(null);
-    const [fileName, setFileName] = useState('');
+    // Multi-file handling (logo, carta, tabla de colores, documentos...)
+    const [uploadedFiles, setUploadedFiles] = useState<UploadedAppFile[]>([]);
+    const [selectedLogoFileId, setSelectedLogoFileId] = useState<string | null>(null);
+    const [isProcessingFiles, setIsProcessingFiles] = useState(false);
+    const [createError, setCreateError] = useState('');
 
     const [step, setStep] = useState<'list' | 'create'>('list');
     const [isLoading, setIsLoading] = useState(false);
@@ -60,30 +61,206 @@ export default function FactoryDashboard() {
     const [font, setFont] = useState<ThemeConfig['font']>('font-lora');
     const [style, setStyle] = useState<ThemeConfig['style']>('classic');
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setFileName(file.name);
-            setMimeType(file.type);
+    const MAX_UPLOAD_FILES = 20;
+
+    const inferFileRole = (name: string, mime: string): UploadedAppFile['role'] => {
+        const lower = name.toLowerCase();
+        if (/logo|marca|escudo|isotipo|emblema/.test(lower)) return 'logo';
+        if (/color|paleta|palette|estilo|style|tema|theme|pantone/.test(lower)) return 'palette';
+        if (/carta|menu|menú|plato|precio|racion|tapa|pintxo|bebida/.test(lower) || mime === 'application/pdf' || mime.startsWith('text/')) return 'menu';
+        return mime.startsWith('image/') ? 'menu' : 'other';
+    };
+
+    const compressImageFile = (file: File, maxDim: number, preserveAlpha: boolean): Promise<{ dataUrl: string; base64: string; mimeType: string }> => {
+        return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            if (file.type.startsWith('image/') || file.type === 'application/pdf') {
-                reader.onload = (evt) => { if (evt.target?.result) setFileData((evt.target.result as string).split(',')[1]); };
-                reader.readAsDataURL(file);
-            } else {
-                reader.onload = (evt) => { if (evt.target?.result) setFileData(evt.target.result as string); };
-                reader.readAsText(file);
-            }
+            reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+            reader.onload = () => {
+                const src = reader.result as string;
+                const img = new Image();
+                img.onerror = () => {
+                    // Fallback si el navegador no decodifica SVG u otro formato en Image
+                    resolve({ dataUrl: src, base64: src.split(',')[1] || '', mimeType: file.type || 'image/png' });
+                };
+                img.onload = () => {
+                    let { width, height } = img;
+                    if (width > maxDim || height > maxDim) {
+                        const scale = maxDim / Math.max(width, height);
+                        width = Math.round(width * scale);
+                        height = Math.round(height * scale);
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        resolve({ dataUrl: src, base64: src.split(',')[1] || '', mimeType: file.type || 'image/png' });
+                        return;
+                    }
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const outMime = preserveAlpha && (file.type === 'image/png' || file.type === 'image/webp' || file.type === 'image/svg+xml')
+                        ? 'image/png'
+                        : 'image/jpeg';
+                    let dataUrl = canvas.toDataURL(outMime, outMime === 'image/jpeg' ? 0.84 : undefined);
+                    if (preserveAlpha && dataUrl.length > 260000) {
+                        dataUrl = canvas.toDataURL('image/webp', 0.82);
+                    }
+                    const finalMime = dataUrl.match(/^data:([^;]+);/)?.[1] || outMime;
+                    resolve({ dataUrl, base64: dataUrl.split(',')[1] || '', mimeType: finalMime });
+                };
+                img.src = src;
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const readSingleFile = async (file: File): Promise<UploadedAppFile> => {
+        const mime = file.type || (file.name.toLowerCase().endsWith('.jfif') ? 'image/jpeg' : file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'text/plain');
+        const role = inferFileRole(file.name, mime);
+        const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+        if (mime.startsWith('image/')) {
+            const isLikelyLogo = role === 'logo';
+            const compressed = await compressImageFile(file, isLikelyLogo ? 600 : 1600, isLikelyLogo);
+            return {
+                id,
+                name: file.name,
+                mimeType: compressed.mimeType,
+                data: compressed.base64,
+                previewUrl: compressed.dataUrl,
+                role,
+                size: file.size
+            };
         }
+
+        if (mime === 'application/pdf') {
+            const base64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error('No se pudo leer el PDF'));
+                reader.onload = (evt) => resolve(((evt.target?.result as string) || '').split(',')[1] || '');
+                reader.readAsDataURL(file);
+            });
+            return { id, name: file.name, mimeType: mime, data: base64, role, size: file.size };
+        }
+
+        const textContent = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
+            reader.onload = (evt) => resolve((evt.target?.result as string) || '');
+            reader.readAsText(file);
+        });
+        return { id, name: file.name, mimeType: mime, data: textContent, role, size: file.size };
+    };
+
+    const addFiles = async (fileList: FileList | File[]) => {
+        const incoming = Array.from(fileList);
+        if (incoming.length === 0) return;
+
+        const remainingSlots = MAX_UPLOAD_FILES - uploadedFiles.length;
+        if (remainingSlots <= 0) {
+            setCreateError(`Has alcanzado el límite de ${MAX_UPLOAD_FILES} archivos.`);
+            return;
+        }
+
+        const toProcess = incoming.slice(0, remainingSlots);
+        if (incoming.length > remainingSlots) {
+            setCreateError(`Se han añadido los primeros ${remainingSlots} archivos (máximo ${MAX_UPLOAD_FILES}).`);
+        } else {
+            setCreateError('');
+        }
+
+        setIsProcessingFiles(true);
+        try {
+            const processed = await Promise.all(toProcess.map(readSingleFile));
+            setUploadedFiles(prev => [...prev, ...processed]);
+            if (!selectedLogoFileId) {
+                const autoLogo = processed.find(f => f.role === 'logo' && f.previewUrl);
+                if (autoLogo) setSelectedLogoFileId(autoLogo.id);
+            }
+        } catch (err) {
+            console.error('Error procesando archivos:', err);
+            setCreateError('No se pudo procesar alguno de los archivos seleccionados.');
+        } finally {
+            setIsProcessingFiles(false);
+        }
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            await addFiles(e.target.files);
+            e.target.value = '';
+        }
+    };
+
+    const removeUploadedFile = (id: string) => {
+        setUploadedFiles(prev => prev.filter(f => f.id !== id));
+        if (selectedLogoFileId === id) setSelectedLogoFileId(null);
+    };
+
+    const updateFileRole = (id: string, role: UploadedAppFile['role']) => {
+        setUploadedFiles(prev => prev.map(f => f.id === id ? { ...f, role } : f));
+        if (role === 'logo') {
+            const target = uploadedFiles.find(f => f.id === id);
+            if (target?.previewUrl) setSelectedLogoFileId(id);
+        } else if (selectedLogoFileId === id) {
+            setSelectedLogoFileId(null);
+        }
+    };
+
+    const toggleLogoSelection = (file: UploadedAppFile) => {
+        if (!file.previewUrl) return;
+        if (selectedLogoFileId === file.id) {
+            setSelectedLogoFileId(null);
+            setUploadedFiles(prev => prev.map(f => f.id === file.id ? { ...f, role: 'menu' } : f));
+        } else {
+            setSelectedLogoFileId(file.id);
+            setUploadedFiles(prev => prev.map(f => f.id === file.id ? { ...f, role: 'logo' } : (f.role === 'logo' ? { ...f, role: 'other' } : f)));
+        }
+    };
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     };
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
-        if(!newName) return;
+        if (!newName.trim()) return;
         setIsLoading(true);
+        setCreateError('');
         try {
-            await createApp(newName, prompt, fileData, mimeType, { font, style });
+            const logoFile = uploadedFiles.find(f => f.id === selectedLogoFileId && f.previewUrl);
+            let finalLogoUrl: string | undefined = undefined;
+            if (logoFile?.previewUrl) {
+                // Asegurar tamaño ligero para Firestore (< 250KB)
+                if (logoFile.previewUrl.length > 250000) {
+                    const img = new Image();
+                    finalLogoUrl = await new Promise<string>((resolve) => {
+                        img.onload = () => {
+                            const maxDim = 480;
+                            const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+                            const c = document.createElement('canvas');
+                            c.width = Math.round(img.width * scale);
+                            c.height = Math.round(img.height * scale);
+                            c.getContext('2d')?.drawImage(img, 0, 0, c.width, c.height);
+                            resolve(c.toDataURL('image/webp', 0.8));
+                        };
+                        img.onerror = () => resolve(logoFile.previewUrl!);
+                        img.src = logoFile.previewUrl!;
+                    });
+                } else {
+                    finalLogoUrl = logoFile.previewUrl;
+                }
+            }
+            await createApp(newName.trim(), prompt, uploadedFiles, { font, style }, finalLogoUrl);
+            setNewName('');
+            setPrompt('');
+            setUploadedFiles([]);
+            setSelectedLogoFileId(null);
         } catch (error) {
-            alert("Error creando la app. Intenta de nuevo.");
+            console.error('Error creando app:', error);
+            setCreateError('Error creando la app. Revisa los archivos o intenta de nuevo.');
         } finally {
             setIsLoading(false);
         }
@@ -241,9 +418,11 @@ export default function FactoryDashboard() {
                                     </div>
                                     {showQr && (
                                         <div className="mt-4 p-4 bg-white rounded-xl flex flex-col items-center justify-center animate-fade-in-up border-4 border-slate-700">
-                                            {(sharingApp.name.toLowerCase().includes('boliña') || sharingApp.id === 'bolina_viejo_v1') && (
+                                            {(sharingApp.name.toLowerCase().includes('boliña') || sharingApp.id === 'bolina_viejo_v1') ? (
                                                 <img src="/logo-bolina.jpg" alt={sharingApp.name} className="h-14 object-contain mb-2 mix-blend-multiply" />
-                                            )}
+                                            ) : sharingApp.logoUrl ? (
+                                                <img src={sharingApp.logoUrl} alt={sharingApp.name} className="h-14 object-contain mb-2" />
+                                            ) : null}
                                             <p className="text-slate-800 font-bold mb-2 text-sm">Escanea para ver la carta:</p>
                                             <img src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(clientUrl)}&size=300x300&qzone=1&bgcolor=ffffff`} alt="QR Code" className="w-48 h-48 object-contain" />
                                         </div>
@@ -449,6 +628,8 @@ export default function FactoryDashboard() {
                                                     <img src="https://www.kanalabeach.eus/wp-content/uploads/2024/06/kanala-logos_LOGO-HORIZONTAL-zuria.png" alt={app.name} className="w-full h-full object-contain p-1" />
                                                 ) : (app.name.toLowerCase().includes('boliña') || app.id === 'bolina_viejo_v1') ? (
                                                     <img src="/logo-bolina.jpg" alt={app.name} className="w-full h-full object-contain bg-white p-1" />
+                                                ) : app.logoUrl ? (
+                                                    <img src={app.logoUrl} alt={app.name} className="w-full h-full object-contain bg-white p-1" />
                                                 ) : (
                                                     <span className="text-3xl text-white">{(app?.name || 'A').charAt(0).toUpperCase()}</span>
                                                 )}
@@ -500,26 +681,159 @@ export default function FactoryDashboard() {
                     </div>
                 )}
                 {step === 'create' && (
-                    <div className="max-w-4xl mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl">
+                    <div className="max-w-4xl mx-auto bg-slate-800 p-6 sm:p-8 rounded-2xl border border-slate-700 shadow-2xl">
                         <div className="flex items-center gap-3 mb-6 border-b border-slate-700 pb-4">
                              <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></div>
-                             <div><h2 className="text-2xl font-bold text-white">Generar Restaurante con IA</h2><p className="text-slate-400 text-sm">Describe tu restaurante y sube tu menú.</p></div>
+                             <div><h2 className="text-2xl font-bold text-white">Generar Restaurante con IA</h2><p className="text-slate-400 text-sm">Sube el logo, todas las páginas de la carta, tabla de colores o cualquier archivo de referencia.</p></div>
                         </div>
-                        <form onSubmit={handleCreate} className="space-y-8">
+                        <form onSubmit={handleCreate} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div><label className="block text-sm font-bold text-slate-300 mb-2">Nombre del Restaurante</label><input autoFocus type="text" value={newName} onChange={e => setNewName(e.target.value)} className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none placeholder-slate-600" placeholder="Ej: La Trattoria Digital" required /></div>
+                                <div><label className="block text-sm font-bold text-slate-300 mb-2">Nombre del Restaurante / Bar</label><input autoFocus type="text" value={newName} onChange={e => setNewName(e.target.value)} className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none placeholder-slate-600" placeholder="Ej: Bar Txoko" required /></div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><label className="block text-sm font-bold text-slate-300 mb-2">Tipografía</label><select value={font} onChange={(e) => setFont(e.target.value as any)} className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none"><option value="font-lora">Clásica (Lora)</option><option value="font-inter">Moderna (Inter)</option><option value="font-serif">Elegante (Serif)</option><option value="font-sans">Limpia (Sans)</option></select></div>
-                                    <div><label className="block text-sm font-bold text-slate-300 mb-2">Tema</label><select value={style} onChange={(e) => setStyle(e.target.value as any)} className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none"><option value="classic">Clásico (Ámbar)</option><option value="modern">Moderno (Azul)</option><option value="fresh">Fresco (Verde/Lima)</option></select></div>
+                                    <div><label className="block text-sm font-bold text-slate-300 mb-2">Tema Base</label><select value={style} onChange={(e) => setStyle(e.target.value as any)} className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none"><option value="classic">Clásico (Ámbar)</option><option value="modern">Moderno (Azul)</option><option value="fresh">Fresco (Verde/Lima)</option></select></div>
                                 </div>
                             </div>
-                            <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-700/50 space-y-4">
-                                <div><label className="block text-sm font-bold text-blue-400 mb-2 flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Subir Menú</label><div className="flex items-center gap-4"><label className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-600 transition-colors text-sm font-medium">Seleccionar Archivo <input type="file" onChange={handleFileChange} accept=".csv,.txt,.json,.md,.pdf,.jpg,.jpeg,.png,.webp" className="hidden" /></label><span className="text-slate-400 text-sm italic truncate max-w-[200px]">{fileName || "Ningún archivo seleccionado"}</span></div></div>
-                                <div><label className="block text-sm font-bold text-slate-300 mb-2">Instrucciones</label><textarea value={prompt} onChange={e => setPrompt(e.target.value)} className="w-full h-32 bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none resize-none" placeholder="Instrucciones para la IA..." /></div>
+
+                            <div className="bg-slate-900/60 p-5 sm:p-6 rounded-xl border border-slate-700/70 space-y-5">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <label className="text-sm font-bold text-cyan-400 flex items-center gap-2">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                            Archivos del Proyecto ({uploadedFiles.length}/{MAX_UPLOAD_FILES})
+                                        </label>
+                                        <p className="text-xs text-slate-400 mt-0.5">Puedes subir varios a la vez o ir añadiendo más: logo, fotos/PDFs de la carta, tabla de colores, notas...</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {uploadedFiles.length > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => { setUploadedFiles([]); setSelectedLogoFileId(null); setCreateError(''); }}
+                                                className="text-xs text-slate-400 hover:text-red-400 px-2.5 py-1.5 rounded-lg border border-slate-700 hover:border-red-500/40 transition-colors"
+                                            >
+                                                Vaciar lista
+                                            </button>
+                                        )}
+                                        <label className={`cursor-pointer bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg font-bold transition-colors text-xs sm:text-sm flex items-center gap-2 shadow ${uploadedFiles.length >= MAX_UPLOAD_FILES || isProcessingFiles ? 'opacity-50 pointer-events-none' : ''}`}>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                            {isProcessingFiles ? 'Procesando...' : uploadedFiles.length > 0 ? 'Añadir más archivos' : 'Seleccionar archivos'}
+                                            <input
+                                                type="file"
+                                                multiple
+                                                onChange={handleFileChange}
+                                                accept=".csv,.txt,.json,.md,.pdf,.jpg,.jpeg,.jfif,.png,.webp,.svg"
+                                                className="hidden"
+                                            />
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {uploadedFiles.length === 0 ? (
+                                    <label className="block cursor-pointer border-2 border-dashed border-slate-700 hover:border-cyan-500/60 rounded-xl p-6 text-center transition-colors bg-slate-900/40">
+                                        <p className="text-sm font-semibold text-slate-300">Pulsa aquí para elegir varios archivos</p>
+                                        <p className="text-xs text-slate-500 mt-1">Imágenes (JPG, PNG, WEBP, SVG), PDFs de carta, textos, CSV o tabla de colores (hasta {MAX_UPLOAD_FILES} archivos)</p>
+                                        <input
+                                            type="file"
+                                            multiple
+                                            onChange={handleFileChange}
+                                            accept=".csv,.txt,.json,.md,.pdf,.jpg,.jpeg,.jfif,.png,.webp,.svg"
+                                            className="hidden"
+                                        />
+                                    </label>
+                                ) : (
+                                    <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+                                        {uploadedFiles.map((file) => {
+                                            const isLogoSelected = selectedLogoFileId === file.id;
+                                            return (
+                                                <div
+                                                    key={file.id}
+                                                    className={`flex flex-wrap sm:flex-nowrap items-center gap-3 p-2.5 rounded-xl border transition-all ${
+                                                        isLogoSelected
+                                                            ? 'bg-emerald-950/30 border-emerald-500/60'
+                                                            : 'bg-slate-800/80 border-slate-700'
+                                                    }`}
+                                                >
+                                                    <div className="w-12 h-12 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                                        {file.previewUrl ? (
+                                                            <img src={file.previewUrl} alt={file.name} className="w-full h-full object-contain bg-white/95 p-0.5" />
+                                                        ) : (
+                                                            <span className="text-[10px] font-bold uppercase text-cyan-400">
+                                                                {file.mimeType === 'application/pdf' ? 'PDF' : file.name.split('.').pop()?.slice(0, 4) || 'DOC'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-semibold text-slate-100 truncate">{file.name}</p>
+                                                        <p className="text-[11px] text-slate-400">{formatFileSize(file.size)}</p>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                                                        <select
+                                                            value={file.role}
+                                                            onChange={(e) => updateFileRole(file.id, e.target.value as UploadedAppFile['role'])}
+                                                            className="bg-slate-900 border border-slate-600 rounded-lg px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-400"
+                                                        >
+                                                            <option value="menu">Carta / Menú</option>
+                                                            <option value="logo">Logo oficial</option>
+                                                            <option value="palette">Tabla de colores</option>
+                                                            <option value="other">Otro archivo</option>
+                                                        </select>
+
+                                                        {file.previewUrl && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => toggleLogoSelection(file)}
+                                                                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-all whitespace-nowrap ${
+                                                                    isLogoSelected
+                                                                        ? 'bg-emerald-600 text-white border-emerald-400'
+                                                                        : 'bg-slate-900 text-slate-300 border-slate-600 hover:border-emerald-400 hover:text-emerald-300'
+                                                                }`}
+                                                                title="Usar esta imagen como logotipo oficial de la app"
+                                                            >
+                                                                {isLogoSelected ? '★ Es el Logo' : 'Usar de Logo'}
+                                                            </button>
+                                                        )}
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeUploadedFile(file.id)}
+                                                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-950/40 transition-colors"
+                                                            title="Quitar archivo"
+                                                        >
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-300 mb-2">Instrucciones para la IA</label>
+                                    <textarea
+                                        value={prompt}
+                                        onChange={e => setPrompt(e.target.value)}
+                                        className="w-full h-32 bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none resize-none placeholder-slate-500"
+                                        placeholder="Describe cómo quieres la app: estilo del bar, colores de la tabla adjunta, secciones, menú del día, pintxos/raciones..."
+                                    />
+                                </div>
                             </div>
+
+                            {createError && (
+                                <p className="text-xs font-semibold text-red-400 bg-red-950/40 border border-red-500/40 rounded-lg px-4 py-2.5">
+                                    {createError}
+                                </p>
+                            )}
+
                             <div className="flex gap-4 pt-4 border-t border-slate-700">
                                 <button type="button" onClick={() => setStep('list')} disabled={isLoading} className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold text-slate-300 transition-colors disabled:opacity-50">Cancelar</button>
-                                <button type="submit" disabled={isLoading || !newName} className="flex-[2] py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-lg font-bold text-white shadow-lg transition-all flex items-center justify-center gap-3">{isLoading ? "Generando..." : "Crear Restaurante"}</button>
+                                <button type="submit" disabled={isLoading || isProcessingFiles || !newName.trim()} className="flex-[2] py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-lg font-bold text-white shadow-lg transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+                                    {isLoading
+                                        ? `Analizando ${uploadedFiles.length > 0 ? `${uploadedFiles.length} archivo${uploadedFiles.length > 1 ? 's' : ''}` : 'instrucciones'} y generando app...`
+                                        : 'Crear Restaurante'}
+                                </button>
                             </div>
                         </form>
                     </div>

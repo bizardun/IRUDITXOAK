@@ -334,30 +334,40 @@ const ClienteApp: React.FC = () => {
 
     if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold uppercase tracking-widest text-xs animate-pulse">Cargando...</div>;
 
+    const customColors = !isKanala && config.id !== 'bolina_viejo_v1' ? config.theme?.customColors : undefined;
+    const isCustomDark = Boolean(customColors?.isDark);
+    const useMetallicFlags = isKanala || isCustomDark;
+
     return (
-        <div className={`min-h-screen pb-16 px-4 sm:px-6 max-w-5xl mx-auto transition-colors duration-500 ${config.name.toLowerCase().includes('kanala') ? 'bg-black text-white' : ''}`}>
+        <div
+            className={`min-h-screen pb-16 px-4 sm:px-6 max-w-5xl mx-auto transition-colors duration-500 ${config.name.toLowerCase().includes('kanala') ? 'bg-black text-white' : ''}`}
+            style={customColors ? { backgroundColor: customColors.background, color: customColors.text } : undefined}
+        >
             {config.name.toLowerCase().includes('kanala') && <style>{`body { background-color: black; }`}</style>}
+            {customColors && <style>{`body { background-color: ${customColors.background}; }`}</style>}
             <header className="pt-6 sm:pt-10 pb-4 text-center">
                 {config.name.toLowerCase().includes('kanala') ? (
                     <img src="https://www.kanalabeach.eus/wp-content/uploads/2024/06/kanala-logos_LOGO-HORIZONTAL-zuria.png" alt={config.name} className="h-16 sm:h-20 mx-auto object-contain mb-4 sm:mb-6" />
                 ) : (config.name.toLowerCase().includes('boliña') || config.id === 'bolina_viejo_v1') ? (
                     <img src="/logo-bolina.jpg" alt={config.name} className="h-24 sm:h-32 mx-auto object-contain mb-1 sm:mb-3 mix-blend-multiply" />
+                ) : config.logoUrl ? (
+                    <img src={config.logoUrl} alt={config.name} className="h-24 sm:h-32 mx-auto object-contain mb-2 sm:mb-4" />
                 ) : (
-                    <h1 className="text-4xl sm:text-6xl font-bold mb-1 sm:mb-3 tracking-tight text-slate-900 leading-tight">{config.name}</h1>
+                    <h1 className="text-4xl sm:text-6xl font-bold mb-1 sm:mb-3 tracking-tight text-slate-900 leading-tight" style={customColors ? { color: customColors.text } : undefined}>{config.name}</h1>
                 )}
-                {config.slogan && <p className="text-slate-500 italic text-[13px] sm:text-base mb-2">{config.slogan}</p>}
+                {config.slogan && <p className="text-slate-500 italic text-[13px] sm:text-base mb-2" style={customColors ? { color: customColors.text, opacity: 0.75 } : undefined}>{config.slogan}</p>}
                 
                 {/* Fecha Actual Localizada */}
                 <div className="flex items-center justify-center gap-2 mb-4 sm:mb-8 opacity-60">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-slate-500 border-b border-slate-200 pb-1">
+                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-slate-500 border-b border-slate-200 pb-1" style={customColors ? { color: customColors.text, borderColor: customColors.accent } : undefined}>
                         {formattedDate}
                     </p>
                 </div>
 
                 <div className="flex justify-center gap-2 sm:gap-4 mb-4 sm:mb-10 overflow-x-auto no-scrollbar py-1">
                     {languages.map(l => (
-                        isKanala ? (
+                        useMetallicFlags ? (
                             <button 
                                 key={l.code} 
                                 onClick={() => setLang(l.code)} 
@@ -410,8 +420,14 @@ const ClienteApp: React.FC = () => {
 
             {renderAllergenLegend()}
 
-            <main className={`p-3 sm:p-12 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border relative min-h-[500px] ${config.name.toLowerCase().includes('kanala') ? 'bg-neutral-900 border-white/10' : 'bg-white border-slate-100'}`}>
-                <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${styles.gradient} opacity-50`}></div>
+            <main
+                className={`p-3 sm:p-12 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border relative min-h-[500px] overflow-hidden ${config.name.toLowerCase().includes('kanala') ? 'bg-neutral-900 border-white/10' : 'bg-white border-slate-100'}`}
+                style={customColors ? { backgroundColor: customColors.surface, color: customColors.text, borderColor: `${customColors.accent}40` } : undefined}
+            >
+                <div
+                    className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${styles.gradient} opacity-50`}
+                    style={customColors ? { background: customColors.accent, opacity: 0.9 } : undefined}
+                ></div>
                 {(!config.name.toLowerCase().includes('kanala') && view === 'menu') ? renderMenu() : renderCartaOrRaciones()}
                 <footer className={`mt-12 sm:mt-20 pt-6 border-t text-center text-[11px] sm:text-[12px] font-black ${config.name.toLowerCase().includes('kanala') ? 'border-white/10 text-white/20' : 'border-slate-50 text-slate-300'}`}>
                     <div className="uppercase tracking-widest mb-4">{t.ivaYDatos}</div>

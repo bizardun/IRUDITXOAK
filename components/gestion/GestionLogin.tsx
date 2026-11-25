@@ -48,6 +48,12 @@ const GestionLogin: React.FC<GestionLoginProps> = ({ onLogin }) => {
                             alt={config.name}
                             className="h-20 mx-auto object-contain mix-blend-multiply"
                         />
+                    ) : config.logoUrl ? (
+                        <img
+                            src={config.logoUrl}
+                            alt={config.name}
+                            className="h-20 mx-auto object-contain"
+                        />
                     ) : (
                         <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl mx-auto flex items-center justify-center border border-blue-100">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

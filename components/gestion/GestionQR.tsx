@@ -142,6 +142,8 @@ const GestionQR: React.FC<GestionQRProps> = ({ setView }) => {
                                 <img src="https://www.kanalabeach.eus/wp-content/uploads/2024/06/kanala-logos_LOGO-HORIZONTAL-zuria.png" alt={config.name} style={{filter: 'invert(1)'}} className="h-24 sm:h-32 mx-auto object-contain mb-4 sm:mb-6" />
                             ) : (config.name.toLowerCase().includes('boliña') || config.id === 'bolina_viejo_v1') ? (
                                 <img src="/logo-bolina.jpg" alt={config.name} className="h-32 sm:h-48 mx-auto object-contain mix-blend-multiply" />
+                            ) : config.logoUrl ? (
+                                <img src={config.logoUrl} alt={config.name} className="h-32 sm:h-48 mx-auto object-contain" />
                             ) : (
                                 <h1 className="text-4xl sm:text-6xl font-bold font-lora text-slate-900 tracking-tight leading-tight">
                                     {config.name}

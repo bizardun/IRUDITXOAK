@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import type { Plato, RestaurantConfig, Alergeno } from '../types';
+import type { Plato, RestaurantConfig, Alergeno, UploadedAppFile, CustomThemeColors } from '../types';
 import { getActiveConfig, bolinaConfig } from '../config/restaurant';
 import { db } from './firebase';
 import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, onSnapshot } from 'firebase/firestore';
@@ -247,27 +247,93 @@ export const analyzeDish = async (dishName: string, dishDescription?: string): P
     }
 };
 
-export const generateAppConfig = async (prompt: string, fileData: string | null, mimeType: string | null): Promise<{ slogan: string, initialPlatos: Plato[] }> => {
+export const generateAppConfig = async (
+    prompt: string,
+    files: UploadedAppFile[] = [],
+    restaurantName?: string
+): Promise<{ slogan: string, initialPlatos: Plato[], customColors?: CustomThemeColors }> => {
     if (!apiKey) throw new Error("API Key missing");
 
+    const roleLabels: Record<string, string> = {
+        menu: 'Carta / Menú / Precios',
+        logo: 'Logotipo oficial del local',
+        palette: 'Tabla de colores / Guía de estilo visual',
+        other: 'Documento o referencia adicional'
+    };
+
+    const hasPaletteOrVisual = files.some(f => f.role === 'palette' || f.role === 'logo') || /color|paleta|oscuro|dark|fondo|estilo|hex|#/i.test(prompt || '');
+
     const systemPrompt = `
-        AI Menu Generator.
-        For all Basque (EU) translations, ensure they align with Elhuyar standards (https://www.euskadi.eus/diccionario-elhuyar/).
-        For allergens, strictly classify under the 14 EU mandatory allergens (GLUTEN, CRUSTACEOS, HUEVOS, PESCADO, CACAHUETES, SOJA, LACTEOS, FRUTOS_CASCARA, APIO, MOSTAZA, SESAMO, SULFITOS, ALTRAMUCES, MOLUSCOS).
-        OUTPUT JSON: { "slogan": "...", "initialPlatos": [...] }
+        You are an expert hospitality app generator, certified EU food safety inspector, and multilingual gastronomic translator.
+        You will receive one or MULTIPLE files (menu photos, PDFs, text/CSV lists, logos, color palettes, style references) plus the user's instructions for "${restaurantName || 'a restaurant/bar'}".
+
+        CRITICAL EXTRACTION & COMPLETENESS RULES:
+        1. Analyze EVERY SINGLE uploaded file thoroughly. Extract ALL dishes, tapas, pintxos, raciones, drinks/portions, menus, and prices visible across ALL menu files without skipping pages or items.
+        2. For EVERY dish, generate COMPLETE, idiomatic translations in ALL FIVE languages (NEVER leave any language empty or with untranslated Spanish words except proper nouns/brands):
+           - ES_Nombre: Original Spanish dish name
+           - EU_Nombre: Authentic Basque (Euskera) following Elhuyar standards (https://www.euskadi.eus/diccionario-elhuyar/)
+           - EN_Nombre: Natural restaurant English
+           - FR_Nombre: Natural restaurant French
+           - DE_Nombre: Natural restaurant German
+           - IT_Nombre: Natural restaurant Italian
+        3. For EVERY dish, detect ALL applicable EU mandatory allergens (Regulation EU 1169/2011) strictly from:
+           GLUTEN, CRUSTACEOS, HUEVOS, PESCADO, CACAHUETES, SOJA, LACTEOS, FRUTOS_CASCARA, APIO, MOSTAZA, SESAMO, SULFITOS, ALTRAMUCES, MOLUSCOS.
+        4. Categorize each dish accurately:
+           - Categoria: "CARTA" (or "MENU" if it belongs to a Menú del Día, or "CARTA,MENU" if both)
+           - Tipo: one of "ENTRANTE", "ENSALADA", "ARROZ", "MARISCO", "PESCADO", "CARNE", "POSTRE"
+           - Es_Racion: true if it is a ración / tapa / pintxo / media ración, otherwise false
+           - Rol_Menu: "PRIMERO", "SEGUNDO", "POSTRE", "RACION", or null
+           - Precio: numeric price (e.g. 12.5), or 0 if not shown
+           - Descripcion: brief Spanish description/ingredients if present on the menu (optional)
+        5. ${hasPaletteOrVisual ? `COLOR PALETTE EXTRACTION: The user provided a color palette/logo or color instructions. Extract a harmonious, high-contrast, readable hex color palette in "customColors": { "background": "#...", "surface": "#...", "text": "#...", "accent": "#...", "isDark": true/false }. Ensure strong WCAG readability between "text" and "surface"/"background".` : `If the user did not request custom colors or upload a color table, omit "customColors" or set it to null.`}
+
+        OUTPUT VALID JSON ONLY matching:
+        {
+          "slogan": "Short authentic tagline in Spanish",
+          "customColors": { "background": "#...", "surface": "#...", "text": "#...", "accent": "#...", "isDark": false } | null,
+          "initialPlatos": [
+            {
+              "ID_Plato": 1,
+              "Precio": 12.5,
+              "ES_Nombre": "...",
+              "EU_Nombre": "...",
+              "EN_Nombre": "...",
+              "FR_Nombre": "...",
+              "DE_Nombre": "...",
+              "IT_Nombre": "...",
+              "Descripcion": "",
+              "Categoria": "CARTA",
+              "Tipo": "ENTRANTE",
+              "Activo_Dia": true,
+              "Rol_Menu": null,
+              "Es_Racion": false,
+              "Alergenos": ["GLUTEN"]
+            }
+          ]
+        }
     `;
 
     const parts: any[] = [];
-    if (fileData && mimeType) {
-        parts.push(mimeType.startsWith('text/') ? { text: fileData } : { inlineData: { mimeType, data: fileData } });
+    for (const file of files) {
+        const label = `[Archivo adjunto: "${file.name}" — Tipo: ${roleLabels[file.role] || 'Referencia'}]`;
+        parts.push({ text: label });
+        const isBinary = file.mimeType.startsWith('image/') || file.mimeType === 'application/pdf';
+        if (isBinary) {
+            parts.push({ inlineData: { mimeType: file.mimeType, data: file.data } });
+        } else {
+            parts.push({ text: file.data });
+        }
     }
-    parts.push({ text: `Prompt: ${prompt}` });
+
+    parts.push({
+        text: `Restaurante/Bar: ${restaurantName || 'Nuevo local'}\nInstrucciones del usuario: ${prompt || 'Extrae toda la carta, traduce a los 5 idiomas, detecta todos los alérgenos y adapta la estética según los archivos adjuntos.'}`
+    });
 
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-4-hydrogen',
             contents: { parts },
-            config: { 
+            config: {
                 systemInstruction: systemPrompt,
                 responseMimeType: "application/json",
                 tools: [{ googleSearch: {} }]
@@ -275,16 +341,45 @@ export const generateAppConfig = async (prompt: string, fileData: string | null,
         });
 
         const result = JSON.parse(response.text || '{}');
+        const validHex = (v: any) => typeof v === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(v.trim());
+        let customColors: CustomThemeColors | undefined = undefined;
+        if (
+            result.customColors &&
+            validHex(result.customColors.background) &&
+            validHex(result.customColors.surface) &&
+            validHex(result.customColors.text) &&
+            validHex(result.customColors.accent)
+        ) {
+            customColors = {
+                background: result.customColors.background.trim(),
+                surface: result.customColors.surface.trim(),
+                text: result.customColors.text.trim(),
+                accent: result.customColors.accent.trim(),
+                isDark: Boolean(result.customColors.isDark)
+            };
+        }
+
+        const validTypes = new Set(["ENTRANTE", "ENSALADA", "ARROZ", "MARISCO", "PESCADO", "CARNE", "POSTRE"]);
         return {
             slogan: result.slogan || "Cocina de Calidad",
-            initialPlatos: (result.initialPlatos || []).map((p: any) => ({
+            customColors,
+            initialPlatos: (Array.isArray(result.initialPlatos) ? result.initialPlatos : []).map((p: any, idx: number) => ({
                 ...p,
-                ID_Plato: Number(p.ID_Plato) || Math.floor(Math.random() * 1000),
+                ID_Plato: idx + 1,
                 Precio: Number(p.Precio) || 0,
-                Categoria: "CARTA",
-                Rol_Menu: null,
+                ES_Nombre: String(p.ES_Nombre || '').trim(),
+                EU_Nombre: String(p.EU_Nombre || p.ES_Nombre || '').trim(),
+                EN_Nombre: String(p.EN_Nombre || p.ES_Nombre || '').trim(),
+                FR_Nombre: String(p.FR_Nombre || p.ES_Nombre || '').trim(),
+                DE_Nombre: String(p.DE_Nombre || p.ES_Nombre || '').trim(),
+                IT_Nombre: String(p.IT_Nombre || p.ES_Nombre || '').trim(),
+                Categoria: String(p.Categoria || 'CARTA').toUpperCase(),
+                Tipo: validTypes.has(String(p.Tipo || '').toUpperCase()) ? String(p.Tipo).toUpperCase() : 'ENTRANTE',
+                Activo_Dia: p.Activo_Dia !== false,
+                Rol_Menu: p.Rol_Menu || null,
+                Es_Racion: Boolean(p.Es_Racion),
                 Alergenos: Array.isArray(p.Alergenos) ? p.Alergenos : []
-            }))
+            })).filter((p: any) => p.ES_Nombre)
         };
     } catch (error) {
         console.error("Generation error:", error);

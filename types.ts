@@ -31,9 +31,28 @@ export interface Plato {
     [key: string]: string | number | boolean | null | undefined | Alergeno[];
 }
 
+export interface CustomThemeColors {
+    background: string;
+    surface: string;
+    text: string;
+    accent: string;
+    isDark?: boolean;
+}
+
+export interface UploadedAppFile {
+    id: string;
+    name: string;
+    mimeType: string;
+    data: string;
+    previewUrl?: string;
+    role: 'menu' | 'logo' | 'palette' | 'other';
+    size: number;
+}
+
 export interface ThemeConfig {
     font: 'font-lora' | 'font-inter' | 'font-serif' | 'font-sans';
     style: 'classic' | 'modern' | 'fresh';
+    customColors?: CustomThemeColors;
 }
 
 export interface RestaurantConfig {
@@ -42,6 +61,7 @@ export interface RestaurantConfig {
     slogan: string;
     initialPlatos: Plato[];
     theme?: ThemeConfig;
+    logoUrl?: string;
     adminPassword?: string;
     officialWebsite?: string;
     publicUrl?: string;

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { RestaurantConfig, ThemeConfig } from '../types';
+import { RestaurantConfig, ThemeConfig, UploadedAppFile } from '../types';
 import { bolinaConfig, getActiveConfig } from '../config/restaurant';
 import api from '../services/api';
 
@@ -11,7 +11,7 @@ interface ConfigContextType {
     loadApp: (id: string) => void;
     updateAppConfig: (updates: Partial<RestaurantConfig>) => Promise<void>;
     updateAppById: (id: string, updates: Partial<RestaurantConfig>) => Promise<void>;
-    createApp: (name: string, prompt: string, fileData: string | null, mimeType: string | null, theme: ThemeConfig) => Promise<void>;
+    createApp: (name: string, prompt: string, files: UploadedAppFile[], theme: ThemeConfig, logoUrl?: string) => Promise<void>;
     deleteApp: (id: string) => void;
     enterFactory: () => void;
     exitFactory: () => void;
@@ -131,7 +131,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     };
 
-    const createApp = async (name: string, prompt: string, fileData: string | null, mimeType: string | null, theme: ThemeConfig) => {
+    const createApp = async (name: string, prompt: string, files: UploadedAppFile[], theme: ThemeConfig, logoUrl?: string) => {
         try {
             const timestamp = Date.now();
             const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
@@ -139,16 +139,19 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
             let newPlatos: any[] = [];
             let newSlogan = '';
+            let finalTheme: ThemeConfig = { ...theme };
 
-            if (prompt || fileData) {
+            if (prompt || files.length > 0) {
                 try {
-                   const aiConfig = await api.generateAppConfig(prompt, fileData, mimeType);
-                   newPlatos = aiConfig.initialPlatos;
-                   newSlogan = aiConfig.slogan;
+                    const aiConfig = await api.generateAppConfig(prompt, files, name);
+                    newPlatos = aiConfig.initialPlatos;
+                    newSlogan = aiConfig.slogan;
+                    if (aiConfig.customColors) {
+                        finalTheme = { ...finalTheme, customColors: aiConfig.customColors };
+                    }
                 } catch (err) {
-                   console.error("Fallo IA en generación", err);
-                   alert("La IA tuvo problemas generando el menú. Se creará una app vacía.");
-                   newPlatos = [];
+                    console.error("Fallo IA en generación", err);
+                    newPlatos = [];
                 }
             }
 
@@ -156,8 +159,10 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 id: newId,
                 name: name,
                 slogan: newSlogan,
-                theme: theme,
-                initialPlatos: newPlatos
+                theme: finalTheme,
+                adminPassword: '1234',
+                initialPlatos: newPlatos,
+                ...(logoUrl ? { logoUrl } : {})
             };
 
             await api.saveApp(newApp, true);
@@ -165,6 +170,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setAvailableApps(prev => [...prev, newApp]);
             
             localStorage.setItem(CURRENT_APP_KEY, newId);
+            api.setApiAppId(newId);
             setConfigState(newApp);
             setIsFactoryMode(false);
         } catch (e) {
