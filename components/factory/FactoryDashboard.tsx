@@ -241,6 +241,9 @@ export default function FactoryDashboard() {
                                     </div>
                                     {showQr && (
                                         <div className="mt-4 p-4 bg-white rounded-xl flex flex-col items-center justify-center animate-fade-in-up border-4 border-slate-700">
+                                            {(sharingApp.name.toLowerCase().includes('boliña') || sharingApp.id === 'bolina_viejo_v1') && (
+                                                <img src="/logo-bolina.jpg" alt={sharingApp.name} className="h-14 object-contain mb-2 mix-blend-multiply" />
+                                            )}
                                             <p className="text-slate-800 font-bold mb-2 text-sm">Escanea para ver la carta:</p>
                                             <img src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(clientUrl)}&size=300x300&qzone=1&bgcolor=ffffff`} alt="QR Code" className="w-48 h-48 object-contain" />
                                         </div>
@@ -444,8 +447,8 @@ export default function FactoryDashboard() {
                                              <div className="w-14 h-14 bg-gradient-to-br from-[#0f172a] to-[#020617] rounded-xl flex items-center justify-center shadow-inner border border-cyan-900/50 overflow-hidden">
                                                 {app.name.toLowerCase().includes('kanala') ? (
                                                     <img src="https://www.kanalabeach.eus/wp-content/uploads/2024/06/kanala-logos_LOGO-HORIZONTAL-zuria.png" alt={app.name} className="w-full h-full object-contain p-1" />
-                                                ) : app.name.toLowerCase().includes('boliña') ? (
-                                                    <img src="/logo boliña sin fondo.jfif" alt={app.name} className="w-full h-full object-contain bg-white" />
+                                                ) : (app.name.toLowerCase().includes('boliña') || app.id === 'bolina_viejo_v1') ? (
+                                                    <img src="/logo-bolina.jpg" alt={app.name} className="w-full h-full object-contain bg-white p-1" />
                                                 ) : (
                                                     <span className="text-3xl text-white">{(app?.name || 'A').charAt(0).toUpperCase()}</span>
                                                 )}

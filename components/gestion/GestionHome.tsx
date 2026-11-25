@@ -16,6 +16,7 @@ import { useConfig } from '../../context/ConfigContext';
 export default function GestionHome({ setView }: { setView: (v: any) => void }) {
     const { config } = useConfig();
     const isKanala = config.name.toLowerCase().includes('kanala');
+    const isBolina = config.name.toLowerCase().includes('boliña') || config.id === 'bolina_viejo_v1';
     const cards = isKanala ? [
         { id: 'ALL', label: 'Gestionar Carta', icon: IconBook, color: 'text-white border-white/20 bg-white/5 hover:bg-white/10' },
         { id: 'qr', label: 'Descargar QR / Cartel', icon: IconQR, color: 'text-white/80 border-white/20 bg-white/5 hover:bg-white/10' },
@@ -28,6 +29,13 @@ export default function GestionHome({ setView }: { setView: (v: any) => void }) 
 
     return (
         <div className="max-w-4xl mx-auto p-6">
+            {isBolina && (
+                <img
+                    src="/logo-bolina.jpg"
+                    alt={config.name}
+                    className="h-20 sm:h-24 mx-auto object-contain mb-3 mix-blend-multiply"
+                />
+            )}
             <h1 className={`text-2xl font-bold font-lora mb-2 text-center ${isKanala ? 'text-white' : 'text-slate-800'}`}>Panel de Gestión</h1>
             <p className={`text-sm text-center mb-8 ${isKanala ? 'text-neutral-400' : 'text-slate-500'}`}>Administra tus platos y verifica la apariencia de tu carta</p>
             

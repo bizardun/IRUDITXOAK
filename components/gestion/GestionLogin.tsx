@@ -9,6 +9,7 @@ interface GestionLoginProps {
 const GestionLogin: React.FC<GestionLoginProps> = ({ onLogin }) => {
     const { config } = useConfig();
     const isKanala = config?.name?.toLowerCase().includes('kanala');
+    const isBolina = config?.name?.toLowerCase().includes('boliña') || config?.id === 'bolina_viejo_v1';
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -40,6 +41,12 @@ const GestionLogin: React.FC<GestionLoginProps> = ({ onLogin }) => {
                             src="https://www.kanalabeach.eus/wp-content/uploads/2024/06/kanala-logos_LOGO-HORIZONTAL-zuria.png"
                             alt={config.name}
                             className="h-12 mx-auto object-contain"
+                        />
+                    ) : isBolina ? (
+                        <img
+                            src="/logo-bolina.jpg"
+                            alt={config.name}
+                            className="h-20 mx-auto object-contain mix-blend-multiply"
                         />
                     ) : (
                         <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl mx-auto flex items-center justify-center border border-blue-100">
