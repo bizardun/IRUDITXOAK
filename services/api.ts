@@ -1,8 +1,15 @@
 
 import type { Plato, RestaurantConfig, Alergeno, UploadedAppFile, CustomThemeColors, DeliveryInfo } from '../types';
 import { getActiveConfig, bolinaConfig } from '../config/restaurant';
-import { db } from './firebase';
+import { db, OperationType, handleFirestoreError } from './firebase';
 import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, onSnapshot } from 'firebase/firestore';
+
+const reportPermissionErrorIfNeeded = (error: unknown, op: OperationType, path: string) => {
+    const msg = error instanceof Error ? error.message : String(error);
+    if (msg.toLowerCase().includes('permission') || msg.includes('PERMISSION_DENIED')) {
+        handleFirestoreError(error, op, path);
+    }
+};
 
 export const translateText = async (text: string, targetLang: string, targetLangName: string): Promise<{text: string, sources: any[]}> => {
     if (!text || !text.trim()) return { text, sources: [] };
@@ -125,6 +132,7 @@ const getApps = async (): Promise<RestaurantConfig[]> => {
         }).filter(app => app.name); // Only return apps that have a name (not just menuPrice stubs)
         return apps;
     } catch (e) {
+        reportPermissionErrorIfNeeded(e, OperationType.LIST, 'restaurants');
         console.error("Error fetching apps from Firebase:", e);
         return [];
     }
@@ -221,7 +229,8 @@ const getMenuPrice = async (): Promise<number> => {
 };
 
 const subscribeToPlatos = (callback: (platos: Plato[]) => void) => {
-    return onSnapshot(collection(db, getPlatosPath()), { includeMetadataChanges: true }, (querySnapshot) => {
+    const path = getPlatosPath();
+    return onSnapshot(collection(db, path), (querySnapshot) => {
         const platos = querySnapshot.docs.map(doc => doc.data() as Plato);
         
         if (platos.length > 0) {
@@ -241,11 +250,16 @@ const subscribeToPlatos = (callback: (platos: Plato[]) => void) => {
         }
     }, (error) => {
         console.error("Error in platos subscription:", error);
+        const activeCfg = getActiveConfig();
+        const fallbackPlatos = activeCfg.id === bolinaConfig.id ? bolinaConfig.initialPlatos : [];
+        callback(activeCfg.initialPlatos && activeCfg.initialPlatos.length > 0 ? activeCfg.initialPlatos : fallbackPlatos);
+        reportPermissionErrorIfNeeded(error, OperationType.LIST, path);
     });
 };
 
 const subscribeToMenuPrice = (callback: (price: number) => void) => {
-    return onSnapshot(doc(db, getConfigPath()), { includeMetadataChanges: true }, (docSnap) => {
+    const path = getConfigPath();
+    return onSnapshot(doc(db, path), (docSnap) => {
         if (docSnap.exists() && docSnap.data().menuPrice !== undefined) {
             callback(parseFloat(docSnap.data().menuPrice));
         } else {
@@ -256,6 +270,8 @@ const subscribeToMenuPrice = (callback: (price: number) => void) => {
         }
     }, (error) => {
         console.error("Error in menu price subscription:", error);
+        callback(16.50);
+        reportPermissionErrorIfNeeded(error, OperationType.GET, path);
     });
 };
 
