@@ -392,10 +392,9 @@ const ClienteApp: React.FC = () => {
         
         return (
             <div className="animate-fade-in max-w-3xl mx-auto space-y-0.5">
-                {sortedKeys.map((k, idx) => {
+                {sortedKeys.map((k) => {
                     const label = config.sectionTranslations?.[k]?.[lang] || config.sectionTranslations?.[k]?.['ES'] || (t.tipos as any)[k] || k;
-                    const defaultOpen = Boolean(customColors && !showTabs && idx === 0);
-                    return renderGroup(groups[k], label, k, false, defaultOpen);
+                    return renderGroup(groups[k], label, k, false, false);
                 })}
             </div>
         );
